@@ -26,7 +26,7 @@ This lab assumes you have:
 
 ### Video Walkthrough
 
-[Demo App for Raft Replication](videohub:1_147isows)
+[Demo App for Raft Replication](videohub:1_m90w4f3p)
 
 
 ## Task 1: Confirm the Remote Desktop Environment
@@ -54,7 +54,7 @@ This lab assumes you have:
 
 3. You can Shutdown a Shard based on the "Shard Database Name" value. Click only one of the matching shard's links for example, either "Shutdown Shard1" or "Shutdown Shard2" or "Shutdown Shard3".
 
-    When Shard2 is the leader for Replucation Unit (RU#1), click "Shutdown Shard2" link as below:
+    When Shard1 is the leader for Replucation Unit (RU#1), click "Shutdown Shard1" link as below:
 
     ![<shutdown_shard2>](./images/task3-scrn-3.png " ")
 
@@ -94,4 +94,4 @@ Ready to explore the complete environment build-out? Continue with the full work
 ## Acknowledgements
 - **Authors** – Ajay Joshi, Oracle Globally Distributed AI Database Product Management
 - **Contributors** – Edgard Ambler, Shefali Bhargava, Carmen Berdant 
-- **Last Updated By/Date** – Ajay Joshi, Oracle Globally Distributed AI Database Product Management, February 2026
+- **Last Updated By/Date** – Ajay Joshi, Oracle Globally Distributed AI Database Product Management, March 2026
