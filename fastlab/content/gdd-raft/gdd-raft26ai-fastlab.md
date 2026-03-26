@@ -41,7 +41,7 @@ This lab assumes you have:
 
 ## Task 2: Observe Automatic Shard Failover
 
-1. Navigate to "All Customers List" page show on the right window and from any customer row, open **More Details** in a new tab to inspect the current shard leader and replication unit for that record. To open **More Details** in a new tab, right click on the "More Details" link and click "Open link in new tab", it will open a page titled with "RAFT 23ai LiveLabs Demo: More Details".
+1. Navigate to "All Customers List" page show on the right window and from any customer row, open **More Details** in a new tab to inspect the current shard leader and replication unit for that record. To open **More Details** in a new tab, right click on the "More Details" link and click "Open link in new tab", it will open a page titled with "RAFT Replication LiveLabs Demo: More Details".
 
     ![<all_customers_more_details_link>](./images/task3-scrn-1.png " ")
 
@@ -87,7 +87,7 @@ Ready to explore the complete environment build-out? Continue with the full work
 
 ## Learn More
 
-- [Raft Replication Documentation](https://docs.oracle.com/en/database/oracle/oracle-database/23/shard/raft-replication.html)
+- [Raft Replication Documentation](https://docs.oracle.com/en/database/oracle/oracle-database/26/shard/raft-replication.html)
 - [Oracle Globally Distributed AI Database Overview](https://www.oracle.com/database/distributed-database/)
 - [Introduction to Global Data Services](https://docs.oracle.com/en/database/oracle/oracle-database/18/gsmug/intro-global-data-services.html)
 
