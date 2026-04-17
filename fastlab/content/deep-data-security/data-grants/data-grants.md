@@ -4,7 +4,7 @@
 
 This lab extends the [Deep Data Security FastLab](../end-user-data-grants/index.html) to cover enterprise identity integration. Instead of password-based end users, Emma and Marvin authenticate through Microsoft Entra ID — and their database access is controlled automatically by the app roles in their OAuth token.
 
-This lab also introduces the a customized **end user context** (`HR.EMP_CTX`), which allows you to enrich your data grant predicates with information about the user and their session. To filter Marvin's view to his direct reports, the database needs his `employee_id` — not just his username. The end user context loads that value lazily, on the first query that needs it.
+This lab also introduces a customized **end user context** (`HR.EMP_CTX`), which allows you to enrich your data grant predicates with information about the user and their session. To filter Marvin's view to his direct reports, the database needs his `employee_id` — not just his username. The end user context loads that value lazily, on the first query that needs it.
 
 Estimated Time: 25 minutes
 
@@ -50,7 +50,7 @@ For details regarding Oracle AI Database and Microsoft Entra ID configuration, p
 
 The first task is to drop the existing end users you created in the previous lab. These dedicated end users are not necessary when using an IdP. As you will see, the integration between the Oracle AI Database and your Microsoft Entra ID application will provide any users with the proper Microsoft Entra ID app roles to authenticate to the Oracle AI Database.
 
-> **Connection:** Run Tasks 1 through 5 as a DBA user or your Deep Data Security administrator.
+> **Connection:** Run Tasks 1 through 6 as a DBA user or your Deep Data Security administrator.
 
 1. Drop end users Emma and Marvin
 
@@ -63,7 +63,7 @@ The first task is to drop the existing end users you created in the previous lab
 
     > **Note:** If you receive `ORA-28037: end user does not exist`, the end users were never created — continue to the next task.
 
-## Task 1: Reconfigure the HR schema
+## Task 2: Reconfigure the HR schema
 
 This task will show you how to reconfigure the user_name columns from only their first name (e.g., `EMMA`) to their Microsoft Entra ID authentication identity (e.g. `emma@example.onmicrosoft.com`)
 
@@ -117,7 +117,7 @@ This task will show you how to reconfigure the user_name columns from only their
 
    Right now, anyone with access to this table sees everything — every SSN, every salary, across every department. That is the problem you are about to fix.
 
-## Task 2: Create the end user context
+## Task 3: Create the end user context
 
 Marvin's data grant needs to know his `employee_id` — not just his username — so it can match the `manager_id` column of his direct reports. Oracle Database provides `ora_end_user_context.USERNAME` as a built-in function, but there is no built-in for `employee_id`. 
 
@@ -189,7 +189,7 @@ Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the bu
 
    `employee_context_admin` acts as a bridge: when a session activates a data role that has been granted this role, it gains execute access to the context package, allowing `o:onFirstRead` to fire and load the user's `employee_id`.
 
-## Task 3: Create Entra ID-mapped data roles
+## Task 4: Create Entra ID-mapped data roles
 
 Besides the custom end user context, another key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DATA ROLE HRAPP_MANAGERS MAPPED TO 'azure_role=MANAGERS'`, you are telling Oracle Database: *"When you see an Entra ID token with the MANAGERS app role claim, automatically activate HRAPP_MANAGERS for that session."* No manual grants, no application logic changes — the mapping is declarative and automatic.
 
@@ -257,7 +257,7 @@ Besides the custom end user context, another key feature of this lab is the `MAP
 
    When Emma authenticates with a token containing the `EMPLOYEES` claim, Oracle Database automatically activates `HRAPP_EMPLOYEES`. When Marvin authenticates with tokens containing both `EMPLOYEES` and `MANAGERS` claims, both data roles activate. No code required.
 
-## Task 4: Create the Data Grants
+## Task 5: Create the Data Grants
 
 For the Oracle Deep Data Security data grants, you will continue to use the same model as the previous lab. Howeve, now you will use your new end user context (`ORA_END_USER_CONTEXT.HR.EMP_CTX.ID`) instead of the subquery for the `HRAPP_MANAGER_ACCESS` data grant. 
 
@@ -309,7 +309,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       | HRAPP\_MANAGER\_ACCESS | UPDATE | HRAPP\_MANAGERS | manager\_id = ORA\_END\_USER\_CONTEXT.HR.EMP\_CTX.ID |
       {: title="Data grants"}
 
-## Task 5: Test as Emma and Marvin
+## Task 6: Test as Emma and Marvin
 
 **The Contrast:** Emma and Marvin run the same query but the results are completely different — enforced by the database. Start with Emma, then connect as Marvin to see the manager view and the end user context load in action.
 
@@ -338,8 +338,10 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
       | AUTHENTICATED\_IDENTITY | ENTERPRISE\_IDENTITY | AUTH\_METHOD | CURRENT\_USER |
       |---|---|---|---|
-      | emma@example.com | emma@example.com | TOKEN\_GLOBAL | XS$NULL |
+      | emma@example.com | \<object-id-uuid\> | TOKEN\_GLOBAL | XS$NULL |
       {: title="Emma's session identity"}
+
+    `AUTHENTICATED_IDENTITY` shows the Entra ID email. `ENTERPRISE_IDENTITY` shows the Entra ID Object ID (a UUID), not the email — this is the object identifier assigned to the user in your Azure tenant.
 
 3. Verify Emma's active data roles. She has only the `EMPLOYEES` app role in Entra ID, so only `HRAPP_EMPLOYEES` activates.
 
@@ -428,7 +430,9 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
 ### Connect as Marvin
 
-8. Connect as Marvin using Entra ID authentication. Marvin has both the `EMPLOYEES` and `MANAGERS` app roles. Authenticate as Marvin.
+8. Connect as Marvin using Entra ID authentication. Marvin has both the `EMPLOYEES` and `MANAGERS` app roles.
+
+    > **Important:** Before connecting, sign out of your Entra ID browser session or open a private/incognito window. `AZURE_INTERACTIVE` reuses an active browser session — if Emma is still signed in, Marvin's `sqlplus /@hrdb` will authenticate as Emma instead.
 
       ```
       <copy>
@@ -448,8 +452,6 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       |---|
       | HRAPP\_EMPLOYEES |
       | HRAPP\_MANAGERS |
-      | XSAUTHENTICATED |
-      | DBMS\_AUTH |
       {: title="Marvin's active roles"}
 
 10. **Marvin asks the AI agent: "Show me my team."** The same query Emma ran.
@@ -515,7 +517,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
    No error, but no rows changed. Even if an AI agent were prompted to give Marvin a raise, the database silently blocks it.
 
-## Task 6: Marvin's role changes in Entra ID
+## Task 7: Marvin's role changes in Entra ID
 
 **No database changes required.** When Marvin's app role changes in Entra ID, his next token no longer contains the `MANAGERS` claim. Oracle Database evaluates the token on every new connection — if `HRAPP_MANAGERS` is not in the token, it does not activate. Nothing in the database changes.
 
@@ -547,7 +549,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       | HRAPP\_EMPLOYEES |
       {: title="Marvin's roles after change"}
 
-4. Run the same query from Task 5. Marvin now sees only his own row.
+4. Run the same query from Task 6. Marvin now sees only his own row.
 
       ```sql
       <copy>
@@ -564,7 +566,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
    Marvin still sees his own SSN and salary — `HRAPP_EMPLOYEES_ACCESS` is still active. His direct reports are gone. **Access policy lives in Entra ID. Oracle Database enforces it automatically. Nothing in the database changed.**
 
-## Task 7 (Optional): Clean up
+## Task 8 (Optional): Clean up
 
 If you want to remove everything created in this lab, run the following as your DBA user.
 
