@@ -1,0 +1,10 @@
+{
+    "workshoptitle": "LiveLabs FastLab: Identity-aware database access using Oracle Deep Data Security",
+    "help": "livelabs-help-database_us@oracle.com",
+    "tutorials": [
+        {
+            "title": "FastLab: Using Oracle Deep Data Security",
+            "filename": "data-grants.md"
+        }
+    ]
+}
