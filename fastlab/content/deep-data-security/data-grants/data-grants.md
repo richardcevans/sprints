@@ -21,8 +21,6 @@ In this lab, you will:
 
 ## The Challenge
 
-> **New to Oracle Deep Data Security?** Complete the [Identity-Driven Data Access using Oracle Deep Data Security FastLab](../end-user-data-grants/index.html) first — it covers end users, data roles, and data grants using password authentication. This lab builds directly on those concepts.
-
 In the previous lab, you learned that you can create a new Oracle Database user, called an end user, and use Oracle Deep Data Security data grants and data roles to manage their access to columns, rows, and even cells. 
 
 In this lab, their identity comes from Microsoft Entra ID instead of the database. Emma and Marvin authenticate to the database using their Microsoft Entra ID credentials. The Oracle Database reads their identity and their app roles from their OAuth token and automatically activates the matching data roles. No application code, no proxy, no middleware.
@@ -38,48 +36,39 @@ As before, the Oracle Database restricts access to only authorized data, regardl
 This lab assumes the following are already configured:
 
 - An **Oracle AI Database 26ai** instance (Autonomous or on-premises)
-- Microsoft Azure Entra ID configured as the identity provider. For details see: [Oracle AI Database 26ai OCI IAM and Entra ID Configuration](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata-datab.html)
+- Microsoft Azure Entra ID configured as the identity provider. 
       - An Azure app registration with app roles defined: `EMPLOYEES` and `MANAGERS`
       - The database objects created in the [Identity-Driven Data Access using Oracle Deep Data Security FastLab](../end-user-data-grants/index.html)
-- The database identity provider must be configured for Azure AD. A DBA must have run:
-      ```sql
-      ALTER SYSTEM SET identity_provider_type = AZURE_AD SCOPE = BOTH;
-      ALTER SYSTEM SET identity_provider_config = '{"application_id_uri": "<APP_ID_URI>", "tenant_id": "<TENANT_ID>", "app_id": "<APP_ID>"}' SCOPE = BOTH;
-      ```
+      - The database identity provider must be configured for Microsoft Entra ID. 
+      - Your `tnsnames.ora` file, or connection string, must use the `AZURE_INTERACTIVE` token type. 
+
+For details regarding Oracle AI Database and Microsoft Entra ID configuration, please see the chapter titled [Oracle AI Database 26ai OCI IAM and Entra ID Configuration](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata-datab.html) in the Oracle AI Database documentation. 
 
 > **Note:** If you don't have Microsoft Entra ID, you can follow the [Identity-Driven Data Access using Oracle Deep Data Security Fastlab](../end-user-data-grants/index.html) instead. It covers the same Deep Data Security concepts using password-based end user authentication, with no external IdP required.
 
-Your `tnsnames.ora` must include an entry configured for Azure Interactive token authentication. Replace the host, certificate DN, `CLIENT_ID`, `AZURE_DB_APP_ID_URI`, and `TENANT_ID` with your environment values:
+## Task 1: Drop End Users
 
-```
-<copy>
-hrdb =
-  (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCPS)(HOST = dbsec-lab.subnet11241656.vcn11241656.oraclevcn.com)(PORT = 2484))
-    (SECURITY =
-      (SSL_SERVER_DN_MATCH = YES)
-      (SSL_SERVER_CERT_DN = "CN=dbsec-lab.subnet11241656.vcn11241656.oraclevcn.com,O=DBSecLab,C=US")
-      (TOKEN_AUTH = AZURE_INTERACTIVE)
-      (CLIENT_ID = 726aa51c-c202-438b-b99a-2865ca4ea0c8)
-      (AZURE_DB_APP_ID_URI = https://richardcevansgmail.onmicrosoft.com/0c532760-02e6-4f72-a052-2178a3ba4a1b)
-      (TENANT_ID = 27acd0bb-0815-4ddb-9385-26fb68891868)
-    )
-    (CONNECT_DATA =
-      (SERVICE_NAME = pdb1)
-    )
-  )
-</copy>
-```
+The first task is to drop the existing end users you created in the previous lab. These dedicated end users are not necessary when using an IdP. As you will see, the integration between the Oracle AI Database and your Microsoft Entra ID application will provide any users with the proper Microsoft Entra ID app roles to authenticate to the Oracle AI Database.
 
-`TOKEN_AUTH = AZURE_INTERACTIVE` triggers a device code flow on `sqlplus /@hrdb` — the database prompts you to authenticate in a browser before opening the session.
+> **Connection:** Run Tasks 1 through 5 as a DBA user or your Deep Data Security administrator.
 
-## Task 1: Set up the HR schema
+1. Drop end users Emma and Marvin
 
-> **Connection:** Run Tasks 1 through 4 as a DBA user or your Deep Data Security administrator.
+      ```sql
+      <copy>
+      DROP END USER emma;
+      DROP END USER marvin;
+      </copy>
+      ```
+
+## Task 1: Reconfigure the HR schema
+
+This task will show you how to reconfigure the user_name columns from only their first name (e.g., `EMMA`) to their Microsoft Entra ID authentication identity (e.g. `emma@example.onmicrosoft.com`)
+
 
 1. Set your Entra ID domain name. This variable is used throughout the lab to append the correct email domain to `user_name` values in `hr.employees` and `hr.managers`.
 
-      ```
+      ```sql
       <copy>
       DEFINE domain_name = 'example.onmicrosoft.com'
       </copy>
