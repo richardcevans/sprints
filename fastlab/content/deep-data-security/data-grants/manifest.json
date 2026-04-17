@@ -3,7 +3,7 @@
     "help": "livelabs-help-database_us@oracle.com",
     "tutorials": [
         {
-            "title": "FastLab: Using Oracle Deep Data Security and Microsoft Entra ID",
+            "title": "FastLab: Oracle Deep Data Security",
             "filename": "data-grants.md"
         }
     ]
