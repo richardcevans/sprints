@@ -21,58 +21,28 @@ In this lab, you will:
 
 ## The Challenge
 
-> **New to Oracle Deep Data Security?** Complete the [end-user-data-grants FastLab](../end-user-data-grants/index.html) first — it covers end users, data roles, and data grants using password authentication. This lab builds directly on those concepts.
+> **New to Oracle Deep Data Security?** Complete the [Identity-Driven Data Access using Oracle Deep Data Security FastLab](../end-user-data-grants/index.html) first — it covers end users, data roles, and data grants using password authentication. This lab builds directly on those concepts.
 
-Emma and Marvin use the same AI HR tool. When each of them asks **"Show me my team's employee details,"** the AI agent sends the same SQL query to the same database. What comes back is completely different — enforced by the database, not the application.
+In the previous lab, you learned that you can create a new Oracle Database user, called an end user, and use Oracle Deep Data Security data grants and data roles to manage their access to columns, rows, and even cells. 
 
-In this lab, their identity comes from Microsoft Entra ID. Oracle Database reads the app roles in their OAuth token and automatically activates the matching data roles. No application code, no proxy, no middleware.
+In this lab, their identity comes from Microsoft Entra ID instead of the database. Emma and Marvin authenticate to the database using their Microsoft Entra ID credentials. The Oracle Database reads their identity and their app roles from their OAuth token and automatically activates the matching data roles. No application code, no proxy, no middleware.
 
-Oracle Database restricts access to only authorized data, regardless of the SQL the agent sends.
+As before, the Oracle Database restricts access to only authorized data, regardless of the SQL statement. 
 
 ## What You Will See
 
 ![Architecture diagram](./images/architecture.png "Architecture diagram showing Emma and Marvin connecting through an AI agent to Oracle Database with Entra ID tokens and data grants enforcing per-user access.")
-
-Same AI agent. Same SQL query. Different data — enforced by the database.
-
-When Emma queries the HR employees table, she sees:
-
-| EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | SSN | SALARY |
-|---|---|---|---|---|
-| 3 | Emma | Baker | 333-33-3333 | 120000 |
-{: title="Emma's result"}
-
-When Marvin queries the same table with the same query, he sees:
-
-| EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | SSN | SALARY |
-|---|---|---|---|---|
-| 2 | Marvin | Morgan | 222-22-2222 | 175000 |
-| 3 | Emma | Baker | (null) | 120000 |
-| 4 | Charlie | Davis | (null) | 95000 |
-| 5 | Dana | Lee | (null) | 130000 |
-{: title="Marvin's result"}
-
-Marvin sees his team. SSNs are hidden for his direct reports. Emma sees only herself.
 
 ## Prerequisites
 
 This lab assumes the following are already configured:
 
 - An **Oracle AI Database 26ai** instance (Autonomous or on-premises)
-- Microsoft Azure Entra ID configured as the identity provider. For details see: [Oracle AI Database 26ai OCI IAM and Entra ID Configuration](https://docs.oracle.com/en/database/)
+- Microsoft Azure Entra ID configured as the identity provider. For details see: [Oracle AI Database 26ai OCI IAM and Entra ID Configuration](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata-datab.html)
       - An Azure app registration with app roles defined: `EMPLOYEES` and `MANAGERS`
-      - User **Emma** assigned to the `EMPLOYEES` app role
-      - User **Marvin** assigned to both `EMPLOYEES` and `MANAGERS` app roles
-- You are connected as a database user for the setup tasks, with privileges including:
-      - CREATE USER
-      - CREATE DATA ROLE
-      - CREATE DATA GRANT
-      - CREATE TABLE
-      - GRANT QUOTA ON a TABLESPACE
-      - ADMINISTER ANY DATA GRANT
-      - GRANT ANY DATA ROLE
+      - The database objects created in the [Identity-Driven Data Access using Oracle Deep Data Security FastLab](../end-user-data-grants/index.html)
 
-> **Note:** No Entra ID? The [end-user-data-grants FastLab](../end-user-data-grants/index.html) covers the same Deep Data Security concepts using password-based end user authentication, with no external IdP required.
+> **Note:** If you don't have Microsoft Entra ID, you can follow the [Identity-Driven Data Access using Oracle Deep Data Security Fastlab](../end-user-data-grants/index.html) instead. It covers the same Deep Data Security concepts using password-based end user authentication, with no external IdP required.
 
 ## Task 1: Set up the HR schema
 
@@ -205,7 +175,7 @@ Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the bu
 
 The key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DATA ROLE HRAPP_MANAGERS MAPPED TO 'azure_role=MANAGERS'`, you are telling Oracle Database: *"When you see an Entra ID token with the MANAGERS app role claim, automatically activate HRAPP_MANAGERS for that session."* No manual grants, no application logic changes — the mapping is declarative and automatic.
 
-1. Create two data roles mapped to their Entra ID app roles.
+1. In the last lab, you created two data roles. You will use the same naming conventions but map them to their Entra ID app role counterparts. When the user has the Entra ID app role, they will automatically have the role in the Oracle AI Database. 
 
       ```sql
       <copy>
@@ -265,7 +235,7 @@ The key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DA
 
    When Emma authenticates with a token containing the `EMPLOYEES` claim, Oracle Database automatically activates `HRAPP_EMPLOYEES`. When Marvin authenticates with tokens containing both `EMPLOYEES` and `MANAGERS` claims, both data roles activate. No code required.
 
-## Task 4: Create the data grants
+## Task 4: Create the Data Grants
 
 1. Create the data grant for the employee role. An employee sees all of their own data and can only update their phone number.
 
@@ -317,7 +287,7 @@ The key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DA
 
 ## Task 5: Test as Emma and Marvin
 
-**The Contrast:** Emma and Marvin run the same query through the same AI agent. The results are completely different — enforced by the database. Start with Emma (the simpler baseline), then connect as Marvin to see the manager view and the end user context load in action.
+**The Contrast:** Emma and Marvin run the same query but the results are completely different — enforced by the database. Start with Emma, then connect as Marvin to see the manager view and the end user context load in action.
 
 ### Connect as Emma
 
