@@ -44,6 +44,30 @@ This lab assumes the following are already configured:
 
 > **Note:** If you don't have Microsoft Entra ID, you can follow the [Identity-Driven Data Access using Oracle Deep Data Security Fastlab](../end-user-data-grants/index.html) instead. It covers the same Deep Data Security concepts using password-based end user authentication, with no external IdP required.
 
+Your `tnsnames.ora` must include an entry configured for Azure Interactive token authentication. Replace the host, certificate DN, `CLIENT_ID`, `AZURE_DB_APP_ID_URI`, and `TENANT_ID` with your environment values:
+
+```
+<copy>
+hrdb =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCPS)(HOST = dbsec-lab.subnet11241656.vcn11241656.oraclevcn.com)(PORT = 2484))
+    (SECURITY =
+      (SSL_SERVER_DN_MATCH = YES)
+      (SSL_SERVER_CERT_DN = "CN=dbsec-lab.subnet11241656.vcn11241656.oraclevcn.com,O=DBSecLab,C=US")
+      (TOKEN_AUTH = AZURE_INTERACTIVE)
+      (CLIENT_ID = 726aa51c-c202-438b-b99a-2865ca4ea0c8)
+      (AZURE_DB_APP_ID_URI = https://richardcevansgmail.onmicrosoft.com/0c532760-02e6-4f72-a052-2178a3ba4a1b)
+      (TENANT_ID = 27acd0bb-0815-4ddb-9385-26fb68891868)
+    )
+    (CONNECT_DATA =
+      (SERVICE_NAME = pdb1)
+    )
+  )
+</copy>
+```
+
+`TOKEN_AUTH = AZURE_INTERACTIVE` triggers a device code flow on `sqlplus /@hrdb` — the database prompts you to authenticate in a browser before opening the session.
+
 ## Task 1: Set up the HR schema
 
 > **Connection:** Run Tasks 1 through 4 as a DBA user or your Deep Data Security administrator.
@@ -96,6 +120,17 @@ This lab assumes the following are already configured:
       {: title="All employees"}
 
    Right now, anyone with access to this table sees everything — every SSN, every salary, across every department. That is the problem you are about to fix.
+
+4. Drop Emma and Marvin as Oracle Database end users. In this lab, they authenticate through Microsoft Entra ID — Oracle Database resolves their identity from the OAuth token. With `MAPPED TO` data roles, no `CREATE END USER` statement is required. If you completed the previous FastLab, drop them now.
+
+      ```sql
+      <copy>
+      DROP END USER EMMA;
+      DROP END USER MARVIN;
+      </copy>
+      ```
+
+    > **Note:** If you receive `ORA-28037: end user does not exist`, the end users were never created — continue to the next task.
 
 ## Task 2: Create the end user context
 
