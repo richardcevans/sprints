@@ -68,15 +68,13 @@ The first task is to drop the existing end users you created in the previous lab
 This task will show you how to reconfigure the user_name columns from only their first name (e.g., `EMMA`) to their Microsoft Entra ID authentication identity (e.g. `emma@example.onmicrosoft.com`)
 
 
-1. Set your Entra ID domain name. This variable is used throughout the lab to append the correct email domain to `user_name` values in `hr.employees` and `hr.managers`.
+1. Set your Entra ID domain name. `DEFINE` creates a session variable in SQL*Plus — the `&&domain_name` syntax in subsequent queries inserts its value automatically. Replace `example.onmicrosoft.com` with your Entra ID tenant domain.
 
       ```sql
       <copy>
       DEFINE domain_name = 'example.onmicrosoft.com'
       </copy>
       ```
-
-    Replace `example.onmicrosoft.com` with your Entra ID tenant domain.
 
 2. Update the employee data to use the Entra ID email address as the `user_name`. Update the managers lookup table to match.
 
@@ -116,6 +114,8 @@ This task will show you how to reconfigure the user_name columns from only their
       {: title="All employees"}
 
    Right now, anyone with access to this table sees everything — every SSN, every salary, across every department. That is the problem you are about to fix.
+
+    > **Note:** The expected results above show `@example.com` as a placeholder. Your results will show your actual Entra ID tenant domain — for example, `emma@yourtenant.onmicrosoft.com`.
 
 ## Task 3: Create the end user context
 
@@ -259,7 +259,7 @@ Besides the custom end user context, another key feature of this lab is the `MAP
 
 ## Task 5: Create the Data Grants
 
-For the Oracle Deep Data Security data grants, you will continue to use the same model as the previous lab. Howeve, now you will use your new end user context (`ORA_END_USER_CONTEXT.HR.EMP_CTX.ID`) instead of the subquery for the `HRAPP_MANAGER_ACCESS` data grant. 
+For the Oracle Deep Data Security data grants, you will continue to use the same model as the previous lab. However, now you will use your new end user context (`ORA_END_USER_CONTEXT.HR.EMP_CTX.ID`) instead of the subquery for the `HRAPP_MANAGER_ACCESS` data grant. 
 
 1. Create the data grant for the employee role. An employee sees all of their own data and can only update their phone number.
 
@@ -313,9 +313,11 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
 **The Contrast:** Emma and Marvin run the same query but the results are completely different — enforced by the database. Start with Emma, then connect as Marvin to see the manager view and the end user context load in action.
 
+> **Before you begin:** Exit your current DBA session by typing `EXIT` and pressing Enter. Tasks 6 and 7 connect as end users — not as the DBA.
+
 ### Connect as Emma
 
-1. Connect as Emma using Entra ID authentication. Because you are using the `AZURE_INTERACTIVE` token type, a web browser will open and you will authenticate as Emma using her Microsoft Entra ID password. 
+1. Connect as Emma using Entra ID authentication. The `AZURE_INTERACTIVE` token type in your `tnsnames.ora` triggers a browser-based login flow — a web browser will open and prompt you to sign in as Emma with her Microsoft Entra ID credentials.
 
       ```
       <copy>
@@ -403,7 +405,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
     Every query returns only Emma's data. Oracle Database rewrites every query at execution time to enforce the data grant predicate — regardless of what the agent asked for.
 
-6. Emma updates her phone number. The data grant includes `UPDATE(phone_number)`.
+6. Emma updates her phone number. The data grant includes `UPDATE(phone_number)`. The update is rolled back to keep the data clean for Marvin's steps.
 
       ```sql
       <copy>
@@ -491,7 +493,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
     `ID: 2` is Marvin's `employee_id`. The predicate `WHERE manager_id = ORA_END_USER_CONTEXT.HR.EMP_CTX.ID` resolved to `WHERE manager_id = 2` — which matches Emma, Charlie, and Dana.
 
-12. Marvin updates a team member's salary. The manager data grant allows `UPDATE(salary)` for direct reports.
+12. Marvin updates a team member's salary. The manager data grant allows `UPDATE(salary)` for direct reports. This is committed to confirm the grant works end-to-end.
 
       ```sql
       <copy>
