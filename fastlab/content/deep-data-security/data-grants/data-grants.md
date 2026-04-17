@@ -41,6 +41,11 @@ This lab assumes the following are already configured:
 - Microsoft Azure Entra ID configured as the identity provider. For details see: [Oracle AI Database 26ai OCI IAM and Entra ID Configuration](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata-datab.html)
       - An Azure app registration with app roles defined: `EMPLOYEES` and `MANAGERS`
       - The database objects created in the [Identity-Driven Data Access using Oracle Deep Data Security FastLab](../end-user-data-grants/index.html)
+- The database identity provider must be configured for Azure AD. A DBA must have run:
+      ```sql
+      ALTER SYSTEM SET identity_provider_type = AZURE_AD SCOPE = BOTH;
+      ALTER SYSTEM SET identity_provider_config = '{"application_id_uri": "<APP_ID_URI>", "tenant_id": "<TENANT_ID>", "app_id": "<APP_ID>"}' SCOPE = BOTH;
+      ```
 
 > **Note:** If you don't have Microsoft Entra ID, you can follow the [Identity-Driven Data Access using Oracle Deep Data Security Fastlab](../end-user-data-grants/index.html) instead. It covers the same Deep Data Security concepts using password-based end user authentication, with no external IdP required.
 
@@ -279,12 +284,12 @@ The key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DA
       CREATE OR REPLACE DATA GRANT hr.HRAPP_EMPLOYEES_ACCESS
         AS SELECT (ALL COLUMNS), UPDATE(phone_number)
         ON hr.employees
-        WHERE user_name = ora_end_user_context.USERNAME
+        WHERE upper(user_name) = upper(ora_end_user_context.USERNAME)
         TO HRAPP_EMPLOYEES;
       </copy>
       ```
 
-    `ora_end_user_context.USERNAME` resolves to the full Entra ID email of the authenticated user — `emma@yourdomain.com` or `marvin@yourdomain.com`. This is why `user_name` values in the table are stored as full email addresses.
+    `ora_end_user_context.USERNAME` resolves to the full Entra ID email of the authenticated user. `upper()` on both sides ensures the comparison is case-insensitive — Entra ID email casing is not guaranteed to match the stored `user_name`.
 
 2. Create the data grant for the manager role. A manager sees their direct reports' records (salary, department, phone) but never their SSNs. They can update salary and department for their direct reports.
 
@@ -314,8 +319,8 @@ The key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DA
 
       | GRANT\_NAME | PRIVILEGE | GRANTEE | PREDICATE |
       |---|---|---|---|
-      | HRAPP\_EMPLOYEES\_ACCESS | SELECT | HRAPP\_EMPLOYEES | user\_name = ora\_end\_user\_context.USERNAME |
-      | HRAPP\_EMPLOYEES\_ACCESS | UPDATE | HRAPP\_EMPLOYEES | user\_name = ora\_end\_user\_context.USERNAME |
+      | HRAPP\_EMPLOYEES\_ACCESS | SELECT | HRAPP\_EMPLOYEES | upper(user\_name) = upper(ora\_end\_user\_context.USERNAME) |
+      | HRAPP\_EMPLOYEES\_ACCESS | UPDATE | HRAPP\_EMPLOYEES | upper(user\_name) = upper(ora\_end\_user\_context.USERNAME) |
       | HRAPP\_MANAGER\_ACCESS | SELECT | HRAPP\_MANAGERS | manager\_id = ORA\_END\_USER\_CONTEXT.HR.EMP\_CTX.ID |
       | HRAPP\_MANAGER\_ACCESS | UPDATE | HRAPP\_MANAGERS | manager\_id = ORA\_END\_USER\_CONTEXT.HR.EMP\_CTX.ID |
       {: title="Data grants"}
@@ -643,6 +648,20 @@ Emma and Marvin run the same query through the same AI agent. Oracle Database re
 The trust chain: **MFA → OAuth token → App role → Oracle `DATA ROLE` → `DATA GRANT` enforcement.**
 
 Access policy lives in Entra ID. Oracle Database enforces it. Nothing in the database changes when a user's role changes.
+
+## Entra ID vs. Password Authentication
+
+The data grants in this lab are identical to the ones in the companion FastLab. The only difference is how the user's identity reaches the database.
+
+| Aspect | Password (prior FastLab) | Entra ID (this lab) |
+|---|---|---|
+| Authentication | `CREATE END USER marvin IDENTIFIED BY ...` | Entra ID OAuth2 token via `AZURE_INTERACTIVE` |
+| Data role activation | `GRANT DATA ROLE ... TO marvin` (explicit) | `MAPPED TO 'azure_role=MANAGERS'` (automatic from token) |
+| End user creation | `CREATE END USER` required | Not needed — identity comes from the token |
+| Connection string | `sqlplus marvin/Oracle123@pdb1` | `sqlplus /@hrdb` (browser login) |
+| Password management | Oracle Database | Entra ID (SSO, MFA) |
+| Data grants | Identical | Identical |
+{: title="Entra ID vs. password authentication"}
 
 ## Next Steps
 
