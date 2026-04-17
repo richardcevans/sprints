@@ -4,7 +4,7 @@
 
 This lab extends the [Deep Data Security FastLab](../end-user-data-grants/index.html) to cover enterprise identity integration. Instead of password-based end users, Emma and Marvin authenticate through Microsoft Entra ID — and their database access is controlled automatically by the app roles in their OAuth token.
 
-This lab also introduces the **end user context** (`HR.EMP_CTX`), which solves a specific problem: data grant predicates do not support subqueries. To filter Marvin's view to his direct reports, the database needs his `employee_id` — not just his username. The end user context loads that value lazily, on the first query that needs it.
+This lab also introduces the a customized **end user context** (`HR.EMP_CTX`), which allows you to enrich your data grant predicates with information about the user and their session. To filter Marvin's view to his direct reports, the database needs his `employee_id` — not just his username. The end user context loads that value lazily, on the first query that needs it.
 
 Estimated Time: 25 minutes
 
