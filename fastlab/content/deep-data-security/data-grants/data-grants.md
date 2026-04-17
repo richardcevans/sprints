@@ -395,10 +395,11 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-      | COUNT(\*) |
-      |---|
-      | 1 |
-      {: title="Emma's count"}
+      ```
+        COUNT(*)
+      ----------
+               1
+      ```
 
     Every query returns only Emma's data. Oracle Database rewrites every query at execution time to enforce the data grant predicate — regardless of what the agent asked for.
 
