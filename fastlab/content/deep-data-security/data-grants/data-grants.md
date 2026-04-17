@@ -61,6 +61,8 @@ The first task is to drop the existing end users you created in the previous lab
       </copy>
       ```
 
+    > **Note:** If you receive `ORA-28037: end user does not exist`, the end users were never created — continue to the next task.
+
 ## Task 1: Reconfigure the HR schema
 
 This task will show you how to reconfigure the user_name columns from only their first name (e.g., `EMMA`) to their Microsoft Entra ID authentication identity (e.g. `emma@example.onmicrosoft.com`)
@@ -115,26 +117,17 @@ This task will show you how to reconfigure the user_name columns from only their
 
    Right now, anyone with access to this table sees everything — every SSN, every salary, across every department. That is the problem you are about to fix.
 
-4. Drop Emma and Marvin as Oracle Database end users. In this lab, they authenticate through Microsoft Entra ID — Oracle Database resolves their identity from the OAuth token. With `MAPPED TO` data roles, no `CREATE END USER` statement is required. If you completed the previous FastLab, drop them now.
-
-      ```sql
-      <copy>
-      DROP END USER EMMA;
-      DROP END USER MARVIN;
-      </copy>
-      ```
-
-    > **Note:** If you receive `ORA-28037: end user does not exist`, the end users were never created — continue to the next task.
-
 ## Task 2: Create the end user context
 
-**Why this task exists:** Marvin's data grant needs to know his `employee_id` — not just his username — so it can match the `manager_id` column of his direct reports. Oracle Database provides `ora_end_user_context.USERNAME` as a built-in function, but there is no built-in for `employee_id`. Subqueries are not supported in data grant predicates, so you cannot look it up inline.
+Marvin's data grant needs to know his `employee_id` — not just his username — so it can match the `manager_id` column of his direct reports. Oracle Database provides `ora_end_user_context.USERNAME` as a built-in function, but there is no built-in for `employee_id`. 
 
-The solution is an **end user context** — a session-scoped object that can store custom attributes. You define a context with an `o:onFirstRead` trigger: the first time a data grant predicate reads the `ID` attribute, Oracle Database automatically calls a procedure that looks up the current user's `employee_id` from `hr.employees` and stores it in the context for the rest of the session.
+In the previous lab, you used a subquery to identify Marvin's manager and employee IDs. Now, you are going to learn how to create an **end user context** — a session-scoped object that can store custom attributes. This allows you to enrich Marvin's, and other user's, session data with information from the OAuth2 token and additional sources. 
+
+You will define a context with an `o:onFirstRead` trigger: the first time a data grant predicate reads the `ID` attribute, Oracle Database automatically calls a procedure that looks up the current user's `employee_id` from `hr.employees` and stores it in the context for the rest of the session.
 
 Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the built-in — so her context is never initialized. This is by design: the lookup only runs for sessions that actually need it.
 
-1. Create the end user context with a JSON schema defining the `ID` attribute and its `o:onFirstRead` trigger.
+1. First, you will create the end user context with a JSON schema defining the `ID` attribute and its `o:onFirstRead` trigger.
 
       ```sql
       <copy>
@@ -152,7 +145,7 @@ Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the bu
 
     > **Note:** `HR.EMP_CTX` is not a database table — you cannot query it with `SELECT * FROM`. It is a virtual, session-scoped object. Read individual attributes with dot notation (`ORA_END_USER_CONTEXT.HR.EMP_CTX.ID`) or retrieve the full namespace as JSON with `SELECT ora_end_user_context.HR FROM DUAL`.
 
-2. Create the package that the `o:onFirstRead` trigger calls. When the `ID` attribute is first read in a session, Oracle Database calls `hr.ctx_pkg.init_user_context`, which looks up the current user's `employee_id` from `hr.employees` using `ora_end_user_context.USERNAME` and stores it in the context. For Entra ID sessions, `USERNAME` resolves to the user's full email address — the same value stored in `hr.employees.user_name`.
+2. Next, you will create the package that the `o:onFirstRead` trigger calls. When the `ID` attribute is first read in a session, Oracle Database calls `hr.ctx_pkg.init_user_context`, which looks up the current user's `employee_id` from `hr.employees` using `ora_end_user_context.USERNAME` and stores it in the context. For Entra ID sessions, `USERNAME` resolves to the user's full email address — the same value stored in `hr.employees.user_name`.
 
       ```sql
       <copy>
@@ -160,11 +153,7 @@ Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the bu
         PROCEDURE init_user_context;
       END;
       /
-      </copy>
-      ```
 
-      ```sql
-      <copy>
       CREATE OR REPLACE PACKAGE BODY hr.ctx_pkg AS
         PROCEDURE init_user_context IS
           sql_stmt VARCHAR2(4000);
@@ -186,7 +175,7 @@ Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the bu
       </copy>
       ```
 
-3. Grant the HR schema the privileges it needs to create and update end user context objects. Then create a database role that holds `EXECUTE` on the context package — this role will be granted to the data roles in the next task, enabling the `o:onFirstRead` trigger to fire.
+3. And finally, you will grant the HR schema the privileges it needs to create and update end user context objects. Then create a database role that holds `EXECUTE` on the context package — this role will be granted to the data roles in the next task, enabling the `o:onFirstRead` trigger to fire.
 
       ```sql
       <copy>
@@ -202,14 +191,16 @@ Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the bu
 
 ## Task 3: Create Entra ID-mapped data roles
 
-The key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DATA ROLE HRAPP_MANAGERS MAPPED TO 'azure_role=MANAGERS'`, you are telling Oracle Database: *"When you see an Entra ID token with the MANAGERS app role claim, automatically activate HRAPP_MANAGERS for that session."* No manual grants, no application logic changes — the mapping is declarative and automatic.
+Besides the custom end user context, another key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DATA ROLE HRAPP_MANAGERS MAPPED TO 'azure_role=MANAGERS'`, you are telling Oracle Database: *"When you see an Entra ID token with the MANAGERS app role claim, automatically activate HRAPP_MANAGERS for that session."* No manual grants, no application logic changes — the mapping is declarative and automatic.
 
 1. In the last lab, you created two data roles. You will use the same naming conventions but map them to their Entra ID app role counterparts. When the user has the Entra ID app role, they will automatically have the role in the Oracle AI Database. 
 
       ```sql
       <copy>
-      CREATE OR REPLACE DATA ROLE hrapp_employees MAPPED TO 'azure_role=EMPLOYEES';
-      CREATE OR REPLACE DATA ROLE hrapp_managers  MAPPED TO 'azure_role=MANAGERS';
+      DROP DATA ROLE hrapp_employees;
+      DROP DATA ROLE hrapp_managers;
+      CREATE DATA ROLE hrapp_employees MAPPED TO 'azure_role=EMPLOYEES';
+      CREATE DATA ROLE hrapp_managers  MAPPED TO 'azure_role=MANAGERS';
       </copy>
       ```
 
@@ -246,6 +237,8 @@ The key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DA
       </copy>
       ```
 
+    > **Note:** If you receive `ORA-01921: role name 'DIRECT_LOGON_ROLE' conflicts with another user or role name`, the role exists from the previous lab. Continue to the next step.
+
 5. Verify the data roles and their Entra ID mappings.
 
       ```sql
@@ -266,12 +259,14 @@ The key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DA
 
 ## Task 4: Create the Data Grants
 
+For the Oracle Deep Data Security data grants, you will continue to use the same model as the previous lab. Howeve, now you will use your new end user context (`ORA_END_USER_CONTEXT.HR.EMP_CTX.ID`) instead of the subquery for the `HRAPP_MANAGER_ACCESS` data grant. 
+
 1. Create the data grant for the employee role. An employee sees all of their own data and can only update their phone number.
 
       ```sql
       <copy>
       CREATE OR REPLACE DATA GRANT hr.HRAPP_EMPLOYEES_ACCESS
-        AS SELECT (ALL COLUMNS), UPDATE(phone_number)
+        AS SELECT, UPDATE(phone_number)
         ON hr.employees
         WHERE upper(user_name) = upper(ora_end_user_context.USERNAME)
         TO HRAPP_EMPLOYEES;
