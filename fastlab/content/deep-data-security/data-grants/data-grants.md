@@ -315,7 +315,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
 ### Connect as Emma
 
-1. Connect as Emma using Entra ID authentication. A device code prompt will appear — authenticate as Emma.
+1. Connect as Emma using Entra ID authentication. Because you are using the `AZURE_INTERACTIVE` token type, a web browser will open and you will authenticate as Emma using her Microsoft Entra ID password. 
 
       ```
       <copy>
@@ -338,7 +338,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
       | AUTHENTICATED\_IDENTITY | ENTERPRISE\_IDENTITY | AUTH\_METHOD | CURRENT\_USER |
       |---|---|---|---|
-      | emma@example.com | emma@example.com | TOKEN | XS$NULL |
+      | emma@example.com | emma@example.com | TOKEN\_GLOBAL | XS$NULL |
       {: title="Emma's session identity"}
 
 3. Verify Emma's active data roles. She has only the `EMPLOYEES` app role in Entra ID, so only `HRAPP_EMPLOYEES` activates.
@@ -352,8 +352,6 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       | ROLE\_NAME |
       |---|
       | HRAPP\_EMPLOYEES |
-      | XSAUTHENTICATED |
-      | DBMS\_AUTH |
       {: title="Emma's active roles"}
 
 4. **Emma asks the AI agent:** **"Show me my employee details."** The AI agent sends a broad query with no WHERE clause.
