@@ -338,7 +338,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
       | AUTHENTICATED\_IDENTITY | ENTERPRISE\_IDENTITY | AUTH\_METHOD | CURRENT\_USER |
       |---|---|---|---|
-      | emma@example.com | \<object-id-uuid\> | TOKEN\_GLOBAL | XS$NULL |
+      | emma@example.com | 00000000-0000-0000-0000-000000000000 | TOKEN\_GLOBAL | XS$NULL |
       {: title="Emma's session identity"}
 
     `AUTHENTICATED_IDENTITY` shows the Entra ID email. `ENTERPRISE_IDENTITY` shows the Entra ID Object ID (a UUID), not the email — this is the object identifier assigned to the user in your Azure tenant.
