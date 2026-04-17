@@ -679,8 +679,8 @@ You configured database-level security for an AI copilot so that each user can o
 |---|---|
 | **END USER** | `emma` and `marvin` — Oracle Database end users authenticated by database password or using OCI IAM or Microsoft Entra ID |
 | **DATA ROLE** | `HRAPP_EMPLOYEES` and `HRAPP_MANAGERS` — named policy holders; data grants attach to the role, the role grants to many users |
-| **DATA GRANT — Task 4** | `HRAPP_EMPLOYEE_ACCESS` — employees see all of their own columns and can update their phone number |
-| **DATA GRANT — Task 4** | `HRAPP_MANAGER_ACCESS` — managers see their direct reports (SSN excluded) and can update salary and department |
+| **DATA GRANT** | `HRAPP_EMPLOYEE_ACCESS` — employees see all of their own columns and can update their phone number |
+| **DATA GRANT** | `HRAPP_MANAGER_ACCESS` — managers see their direct reports (SSN excluded) and can update salary and department |
 | **`ORA_END_USER_CONTEXT.username`** | Built-in function that resolves to the authenticated user's identity at query time — the key to the row-filter predicate |
 | **`DIRECT_LOGON_ROLE`** | Database role granting `CREATE SESSION`, required for direct SQL*Plus connections |
 {: title="Lab components"}
