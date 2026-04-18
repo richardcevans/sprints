@@ -77,7 +77,7 @@ GRANT CREATE ROLE TO deepsec_admin;
 GRANT DROP ANY ROLE TO deepsec_admin;
 GRANT GRANT ANY ROLE TO deepsec_admin;
 GRANT GRANT ANY PRIVILEGE TO deepsec_admin;
-GRANT SELECT ANY DICTIONARY TO deepsec_admin;
+GRANT SELECT_CATALOG_ROLE TO deepsec_admin;
 
 -- Deep Data Security privileges (26ai)
 GRANT CREATE END USER TO deepsec_admin;
