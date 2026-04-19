@@ -689,6 +689,8 @@ Oracle Database restricted Emma's access to only authorized data — regardless 
 
 The Trust Chain: **End user authentication → `DATA ROLE` → `DATA GRANT` enforcement.** The database enforces the boundary, not the application and not the agent.
 
+<!--
+
 ## Next Steps
 
 This lab used password-based authentication to focus on the Deep Data Security mechanics. In a production environment, end users authenticate through an enterprise identity provider — and their application roles flow in automatically via OAuth token, mapping directly to Oracle data roles.
@@ -696,6 +698,7 @@ This lab used password-based authentication to focus on the Deep Data Security m
 To see this in action with Microsoft Entra ID, try the next FastLab:
 
 * [Oracle Deep Data Security with Microsoft Entra ID](../data-grants/index.html)
+ -->
 
 ## Learn More
 
