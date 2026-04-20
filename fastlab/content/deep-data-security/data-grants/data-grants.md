@@ -325,7 +325,21 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-2. Verify Emma's session identity. `AUTHENTICATED_IDENTITY` shows the Entra ID email Oracle Database resolved from the token. `CURRENT_USER` shows `XS$NULL` — token-authenticated end users are not schema users. `XS$NULL` is a null placeholder used to indicate an active end user session in Oracle Deep Data Security. It has no privileges and cannot own objects.
+2. Confirm Emma's end user identity.
+
+      ```sql
+      <copy>
+      SELECT ORA_END_USER_CONTEXT.username FROM dual;
+      </copy>
+      ```
+
+      ```
+      USERNAME
+      --------------------------------------------------------------------------------
+      "emma@example.com"
+      ```
+
+3. Verify Emma's session identity. `AUTHENTICATED_IDENTITY` shows the Entra ID email Oracle Database resolved from the token. `CURRENT_USER` shows `XS$NULL` — token-authenticated end users are not schema users. `XS$NULL` is a null placeholder used to indicate an active end user session in Oracle Deep Data Security. It has no privileges and cannot own objects.
 
       ```sql
       <copy>
@@ -345,7 +359,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
     `AUTHENTICATED_IDENTITY` shows the Entra ID email. `ENTERPRISE_IDENTITY` shows the Entra ID Object ID (a UUID), not the email — this is the object identifier assigned to the user in your Azure tenant.
 
-3. Verify Emma's active data roles. She has only the `EMPLOYEES` app role in Entra ID, so only `HRAPP_EMPLOYEES` activates.
+4. Verify Emma's active data roles. She has only the `EMPLOYEES` app role in Entra ID, so only `HRAPP_EMPLOYEES` activates.
 
       ```sql
       <copy>
@@ -358,7 +372,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       | HRAPP\_EMPLOYEES |
       {: title="Emma's active roles"}
 
-4. Emma runs a broad query with no WHERE clause.
+5. Emma runs a broad query with no WHERE clause.
 
       ```sql
       <copy>
@@ -375,7 +389,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
     Emma sees **1 row** — only herself. The table has 7 employees. Oracle Database added the data grant predicate to her query automatically.
 
-5. **The guardrail holds — even for "weird" queries.** Try requesting Marvin's row by name:
+6. **The guardrail holds — even for "weird" queries.** Try requesting Marvin's row by name:
 
       ```sql
       <copy>
@@ -405,7 +419,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
     Every query returns only Emma's data. Oracle Database rewrites every query at execution time to enforce the data grant predicate — regardless of what SQL was issued.
 
-6. Emma updates her phone number. The data grant includes `UPDATE(phone_number)`. The update is rolled back to keep the data clean for Marvin's steps.
+7. Emma updates her phone number. The data grant includes `UPDATE(phone_number)`. The update is rolled back to keep the data clean for Marvin's steps.
 
       ```sql
       <copy>
@@ -419,7 +433,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       Rollback complete.
       ```
 
-7. Emma attempts to update her salary. The data grant has no `UPDATE` on `salary`.
+8. Emma attempts to update her salary. The data grant has no `UPDATE` on `salary`.
 
       ```sql
       <copy>
@@ -443,7 +457,21 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-9. Verify Marvin's active data roles. Both `HRAPP_EMPLOYEES` and `HRAPP_MANAGERS` activate because both claims are present in his token.
+9. Confirm Marvin's end user identity.
+
+      ```sql
+      <copy>
+      SELECT ORA_END_USER_CONTEXT.username FROM dual;
+      </copy>
+      ```
+
+      ```
+      USERNAME
+      --------------------------------------------------------------------------------
+      "marvin@example.com"
+      ```
+
+10. Verify Marvin's active data roles. Both `HRAPP_EMPLOYEES` and `HRAPP_MANAGERS` activate because both claims are present in his token.
 
       ```sql
       <copy>
@@ -457,7 +485,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       | HRAPP\_MANAGERS |
       {: title="Marvin's active roles"}
 
-10. Marvin runs the same query Emma ran.
+11. Marvin runs the same query Emma ran.
 
       ```sql
       <copy>
@@ -479,7 +507,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
     **Same query. Completely different results — enforced by the database.**
 
-11. Inspect the end user context. The `o:onFirstRead` trigger fired when the manager data grant predicate first evaluated `ORA_END_USER_CONTEXT.HR.EMP_CTX.ID`, loading Marvin's `employee_id`.
+12. Inspect the end user context. The `o:onFirstRead` trigger fired when the manager data grant predicate first evaluated `ORA_END_USER_CONTEXT.HR.EMP_CTX.ID`, loading Marvin's `employee_id`.
 
       ```sql
       <copy>
@@ -493,7 +521,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
     `ID: 2` is Marvin's `employee_id`. The predicate `WHERE manager_id = ORA_END_USER_CONTEXT.HR.EMP_CTX.ID` resolved to `WHERE manager_id = 2` — which matches Emma, Charlie, and Dana.
 
-12. Marvin updates a team member's salary. The manager data grant allows `UPDATE(salary)` for direct reports. This is committed to confirm the grant works end-to-end.
+13. Marvin updates a team member's salary. The manager data grant allows `UPDATE(salary)` for direct reports. This is committed to confirm the grant works end-to-end.
 
       ```sql
       <copy>
@@ -506,7 +534,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       1 row updated.
       ```
 
-13. Marvin attempts to update his own salary. The manager data grant predicate is `WHERE manager_id = 2` — his direct reports. Marvin's own row has `manager_id = 1` (he reports to Grace), so the predicate excludes him. The employee data grant has no `UPDATE` on salary.
+14. Marvin attempts to update his own salary. The manager data grant predicate is `WHERE manager_id = 2` — his direct reports. Marvin's own row has `manager_id = 1` (he reports to Grace), so the predicate excludes him. The employee data grant has no `UPDATE` on salary.
 
       ```sql
       <copy>
