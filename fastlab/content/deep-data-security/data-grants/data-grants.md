@@ -15,7 +15,7 @@ In this lab, you will:
 - Update the HR schema to use Entra ID email addresses as end user identities
 - Create an end user context with an `o:onFirstRead` trigger to load manager attributes
 - Create data roles mapped to Entra ID app roles using the `MAPPED TO` clause
-- Create data grants using both the built-in `ora_end_user_context.USERNAME` and a custom context attribute
+- Create data grants using both the built-in `ORA_END_USER_CONTEXT.username` and a custom context attribute
 - Test as Emma and Marvin connecting via OAuth token and verify the different access results
 - Demonstrate that revoking an Entra ID app role immediately changes database access with no database changes
 
@@ -119,13 +119,13 @@ This task will show you how to reconfigure the user_name columns from only their
 
 ## Task 3: Create the end user context
 
-Marvin's data grant needs to know his `employee_id` — not just his username — so it can match the `manager_id` column of his direct reports. Oracle Database provides `ora_end_user_context.USERNAME` as a built-in function, but there is no built-in for `employee_id`. 
+Marvin's data grant needs to know his `employee_id` — not just his username — so it can match the `manager_id` column of his direct reports. Oracle Database provides `ORA_END_USER_CONTEXT.username` as a built-in function, but there is no built-in for `employee_id`. 
 
 In the previous lab, you used a subquery to identify Marvin's manager and employee IDs. Now, you are going to learn how to create an **end user context** — a session-scoped object that can store custom attributes. This allows you to enrich Marvin's, and other user's, session data with information from the OAuth2 token and additional sources. 
 
 You will define a context with an `o:onFirstRead` trigger: the first time a data grant predicate reads the `ID` attribute, Oracle Database automatically calls a procedure that looks up the current user's `employee_id` from `hr.employees` and stores it in the context for the rest of the session.
 
-Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the built-in — so her context is never initialized. This is by design: the lookup only runs for sessions that actually need it.
+Emma's data grant predicate uses only `ORA_END_USER_CONTEXT.username` — the built-in — so her context is never initialized. This is by design: the lookup only runs for sessions that actually need it.
 
 1. First, you will create the end user context with a JSON schema defining the `ID` attribute and its `o:onFirstRead` trigger.
 
@@ -145,7 +145,7 @@ Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the bu
 
     > **Note:** `HR.EMP_CTX` is not a database table — you cannot query it with `SELECT * FROM`. It is a virtual, session-scoped object. Read individual attributes with dot notation (`ORA_END_USER_CONTEXT.HR.EMP_CTX.ID`) or retrieve the full namespace as JSON with `SELECT ora_end_user_context.HR FROM DUAL`.
 
-2. Next, you will create the package that the `o:onFirstRead` trigger calls. When the `ID` attribute is first read in a session, Oracle Database calls `hr.ctx_pkg.init_user_context`, which looks up the current user's `employee_id` from `hr.employees` using `ora_end_user_context.USERNAME` and stores it in the context. For Entra ID sessions, `USERNAME` resolves to the user's full email address — the same value stored in `hr.employees.user_name`.
+2. Next, you will create the package that the `o:onFirstRead` trigger calls. When the `ID` attribute is first read in a session, Oracle Database calls `hr.ctx_pkg.init_user_context`, which looks up the current user's `employee_id` from `hr.employees` using `ORA_END_USER_CONTEXT.username` and stores it in the context. For Entra ID sessions, `username` resolves to the user's full email address — the same value stored in `hr.employees.user_name`.
 
       ```sql
       <copy>
@@ -163,7 +163,7 @@ Emma's data grant predicate uses only `ora_end_user_context.USERNAME` — the bu
             SET t.CONTEXT.ID = (
                SELECT e.employee_id
                FROM hr.employees e
-               WHERE e.user_name = ora_end_user_context.USERNAME
+               WHERE e.user_name = ORA_END_USER_CONTEXT.username
              )
             WHERE owner = ''HR''
             AND name = ''EMP_CTX'';
@@ -268,12 +268,12 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       CREATE OR REPLACE DATA GRANT hr.HRAPP_EMPLOYEES_ACCESS
         AS SELECT, UPDATE(phone_number)
         ON hr.employees
-        WHERE upper(user_name) = upper(ora_end_user_context.USERNAME)
+        WHERE upper(user_name) = upper(ORA_END_USER_CONTEXT.username)
         TO HRAPP_EMPLOYEES;
       </copy>
       ```
 
-    `ora_end_user_context.USERNAME` resolves to the full Entra ID email of the authenticated user. `upper()` on both sides ensures the comparison is case-insensitive — Entra ID email casing is not guaranteed to match the stored `user_name`.
+    `ORA_END_USER_CONTEXT.username` resolves to the full Entra ID email of the authenticated user. `upper()` on both sides ensures the comparison is case-insensitive — Entra ID email casing is not guaranteed to match the stored `user_name`.
 
 2. Create the data grant for the manager role. A manager sees their direct reports' records (salary, department, phone) but never their SSNs. They can update salary and department for their direct reports.
 
@@ -627,7 +627,7 @@ Emma and Marvin run the same query through the same AI agent. Oracle Database re
 | **data roles with `MAPPED TO`** | `HRAPP_EMPLOYEES` and `HRAPP_MANAGERS` auto-activate from Entra ID app role claims in the OAuth token |
 | **data grant — employees** | `HRAPP_EMPLOYEES_ACCESS` — SELECT all columns, UPDATE phone number, own row only |
 | **data grant — managers** | `HRAPP_MANAGER_ACCESS` — SELECT all except SSN, UPDATE salary and department, direct reports only |
-| **`ora_end_user_context.USERNAME`** | Built-in function resolving to the authenticated user's Entra ID email — used in the employee predicate |
+| **`ORA_END_USER_CONTEXT.username`** | Built-in function resolving to the authenticated user's Entra ID email — used in the employee predicate |
 | **end user context (`HR.EMP_CTX`)** | Session-scoped context with lazy initialization that resolves `employee_id` for the manager predicate |
 | **`DIRECT_LOGON_ROLE`** | Database role granting `CREATE SESSION`, required for direct SQL*Plus connections |
 {: title="Lab components"}
