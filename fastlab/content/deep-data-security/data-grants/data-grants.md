@@ -29,7 +29,7 @@ As before, the Oracle Database restricts access to only authorized data, regardl
 
 ## What You Will See
 
-![Architecture diagram](./images/deep-sec-direct-connect-idp-architecture.png "Architecture diagram showing Emma and Marvin connecting through an AI agent to Oracle Database with Entra ID tokens and data grants enforcing per-user access.")
+![Architecture diagram](./images/deep-sec-direct-connect-idp-architecture.png "Architecture diagram showing Emma and Marvin connecting through Oracle Database with Entra ID tokens and data grants enforcing per-user access.")
 
 ## Prerequisites
 
@@ -358,7 +358,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       | HRAPP\_EMPLOYEES |
       {: title="Emma's active roles"}
 
-4. **Emma asks the AI agent:** **"Show me my employee details."** The AI agent sends a broad query with no WHERE clause.
+4. Emma runs a broad query with no WHERE clause.
 
       ```sql
       <copy>
@@ -403,7 +403,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
                1
       ```
 
-    Every query returns only Emma's data. Oracle Database rewrites every query at execution time to enforce the data grant predicate — regardless of what the agent asked for.
+    Every query returns only Emma's data. Oracle Database rewrites every query at execution time to enforce the data grant predicate — regardless of what SQL was issued.
 
 6. Emma updates her phone number. The data grant includes `UPDATE(phone_number)`. The update is rolled back to keep the data clean for Marvin's steps.
 
@@ -457,7 +457,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       | HRAPP\_MANAGERS |
       {: title="Marvin's active roles"}
 
-10. **Marvin asks the AI agent: "Show me my team."** The same query Emma ran.
+10. Marvin runs the same query Emma ran.
 
       ```sql
       <copy>
@@ -477,7 +477,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
     Marvin sees **4 rows** — himself and his 3 direct reports. He sees his own SSN (from `HRAPP_EMPLOYEES_ACCESS`) but SSN is hidden for his reports (excluded by `HRAPP_MANAGER_ACCESS`). Bob, Fiona, and Grace are not in his reporting chain and are not visible.
 
-    **Same query. Same agent. Completely different results — enforced by the database.**
+    **Same query. Completely different results — enforced by the database.**
 
 11. Inspect the end user context. The `o:onFirstRead` trigger fired when the manager data grant predicate first evaluated `ORA_END_USER_CONTEXT.HR.EMP_CTX.ID`, loading Marvin's `employee_id`.
 
@@ -518,7 +518,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       0 rows updated.
       ```
 
-   No error, but no rows changed. Even if an AI agent were prompted to give Marvin a raise, the database silently blocks it.
+   No error, but no rows changed. The database silently blocks it — the data grant does not include `UPDATE(salary)` for the managers role.
 
 ## Task 7: Marvin's role changes in Entra ID
 
