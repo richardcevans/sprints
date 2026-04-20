@@ -353,10 +353,11 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-      | ROLE\_NAME |
-      |---|
-      | HRAPP\_EMPLOYEES |
-      {: title="Emma's active roles"}
+      ```
+      ROLE_NAME
+      ---------------------
+      HRAPP_EMPLOYEES
+      ```
 
 4. **Emma asks the AI agent:** **"Show me my employee details."** The AI agent sends a broad query with no WHERE clause.
 
@@ -451,11 +452,12 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-      | ROLE\_NAME |
-      |---|
-      | HRAPP\_EMPLOYEES |
-      | HRAPP\_MANAGERS |
-      {: title="Marvin's active roles"}
+      ```
+      ROLE_NAME
+      ---------------------
+      HRAPP_EMPLOYEES
+      HRAPP_MANAGERS
+      ```
 
 10. **Marvin asks the AI agent: "Show me my team."** The same query Emma ran.
 
@@ -547,10 +549,11 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-      | ROLE\_NAME |
-      |---|
-      | HRAPP\_EMPLOYEES |
-      {: title="Marvin's roles after change"}
+      ```
+      ROLE_NAME
+      ---------------------
+      HRAPP_EMPLOYEES
+      ```
 
 4. Run the same query from Task 6. Marvin now sees only his own row.
 
