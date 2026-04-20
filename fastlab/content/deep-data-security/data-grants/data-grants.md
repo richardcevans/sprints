@@ -29,7 +29,7 @@ As before, the Oracle Database restricts access to only authorized data, regardl
 
 ## What You Will See
 
-![Architecture diagram](./images/architecture.png "Architecture diagram showing Emma and Marvin connecting through an AI agent to Oracle Database with Entra ID tokens and data grants enforcing per-user access.")
+![Architecture diagram](./images/deep-sec-direct-connect-idp-architecture.png "Architecture diagram showing Emma and Marvin connecting through an AI agent to Oracle Database with Entra ID tokens and data grants enforcing per-user access.")
 
 ## Prerequisites
 
