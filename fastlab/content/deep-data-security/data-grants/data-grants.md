@@ -345,7 +345,21 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
     `AUTHENTICATED_IDENTITY` shows the Entra ID email. `ENTERPRISE_IDENTITY` shows the Entra ID Object ID (a UUID), not the email — this is the object identifier assigned to the user in your Azure tenant.
 
-3. Verify Emma's active data roles. She has only the `EMPLOYEES` app role in Entra ID, so only `HRAPP_EMPLOYEES` activates.
+3. Confirm Emma's end user identity.
+
+      ```sql
+      <copy>
+      SELECT ORA_END_USER_CONTEXT.username FROM dual;
+      </copy>
+      ```
+
+      ```
+      USERNAME
+      --------------------------------------------------------------------------------
+      "emma@example.com"
+      ```
+
+4. Verify Emma's active data roles. She has only the `EMPLOYEES` app role in Entra ID, so only `HRAPP_EMPLOYEES` activates.
 
       ```sql
       <copy>
@@ -444,7 +458,21 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-9. Verify Marvin's active data roles. Both `HRAPP_EMPLOYEES` and `HRAPP_MANAGERS` activate because both claims are present in his token.
+9. Confirm Marvin's end user identity.
+
+      ```sql
+      <copy>
+      SELECT ORA_END_USER_CONTEXT.username FROM dual;
+      </copy>
+      ```
+
+      ```
+      USERNAME
+      --------------------------------------------------------------------------------
+      "marvin@example.com"
+      ```
+
+10. Verify Marvin's active data roles. Both `HRAPP_EMPLOYEES` and `HRAPP_MANAGERS` activate because both claims are present in his token.
 
       ```sql
       <copy>
