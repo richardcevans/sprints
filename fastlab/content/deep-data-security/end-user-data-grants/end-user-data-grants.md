@@ -54,6 +54,7 @@ This lab is a walk-through of the technology. If you wish to follow along, you s
 
 - An **Oracle AI Database 26ai** instance (Autonomous or on-premises)
 - You have access to a DBA account to run the setup tasks. To use a least-privilege approach instead, Task 0 walks you through creating a dedicated administrator.
+- **SQL\*Plus or SQLcl** installed and accessible from your terminal (required for Tasks 5 and 6 to connect directly as end users)
 
 
 ## Task 0 (Optional): Create a Deep Data Security Administrator
@@ -91,7 +92,7 @@ GRANT ADMINISTER ANY DATA GRANT TO deepsec_admin;
 </copy>
 ```
 
-Connect as `deepsec_admin` to run Tasks 1 through 7.
+Connect as `deepsec_admin` to run Tasks 1 through 6.
 
 ## Task 1: Create the HR Schema and Employee Data
 
@@ -212,7 +213,7 @@ Connect as `deepsec_admin` to run Tasks 1 through 7.
       CREATE END USER marvin IDENTIFIED BY Oracle123;
       </copy>
       ```
-## Task 3: Create Database Roles and Data Roles
+## Task 3: Create the Logon Role and Data Roles
 
 > **Connection:** Run as a DBA user or your Deep Data Security Administrator.
 
@@ -234,7 +235,7 @@ Connect as `deepsec_admin` to run Tasks 1 through 7.
       </copy>
       ```
 
-3. Now, Emma and Marvin need to have their appropriate data roles. Emma is an employee and Marvin is a manager. 
+3. Now, grant the appropriate data roles to Emma and Marvin. Emma is an employee and Marvin is both an employee and a manager.
 
       ```sql
       <copy>
@@ -289,7 +290,7 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
       </copy>
       ```
 
-    The predicate (`WHERE user_name = ORA_END_USER_CONTEXT.username`) is evaluated at query time. A built-in SQL function (`ORA_END_USER_CONTEXT.username`) resolves the identity of the authenticated end user — no setup, no configuration required. When Emma runs any query on `hr.employees`, Oracle Database silently rewrites it to add this predicate.
+    The predicate (`WHERE upper(user_name) = upper(ORA_END_USER_CONTEXT.username)`) is evaluated at query time. A built-in SQL function (`ORA_END_USER_CONTEXT.username`) resolves the identity of the authenticated end user — no setup, no configuration required. The `upper()` wrapping on both sides ensures case-insensitive matching (explained further in Task 5). When Emma runs any query on `hr.employees`, Oracle Database silently rewrites it to add this predicate.
 
 2. Create a data grant that identifies the manager of each employee. This data grant should have a limited number of columns a manager can SELECT as well as a limited number of columns they can UPDATE.
 
@@ -356,6 +357,8 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
 1. Connect as Emma.
 
     > **Note:** This lab uses SQL\*Plus to connect directly as Emma, issuing the same queries an AI agent that passes her enterprise identity would issue on her behalf. The Deep Data Security enforcement is identical regardless of whether the query originates from an agent, an application, or a direct connection.
+
+    > **Note:** Replace `hrdb` with the TNS alias or Easy Connect string for your database. If you are using Autonomous Database, this is typically found in your wallet's `tnsnames.ora`.
 
     ```
     <copy>
@@ -461,6 +464,8 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
 
     No error — but no rows changed. Oracle Database silently blocks the update because the data grant does not include `UPDATE(salary)`. Even if an AI agent were tricked into generating this statement, the database enforces the boundary.
 
+    > **Note:** Deep Data Security's design for unauthorized column updates is to return 0 rows rather than raise an error. This avoids leaking information about which columns are restricted. DELETE behaves differently — it raises an explicit error because there is no DELETE privilege on the table at all, not just a column-level restriction.
+
 8. What if Emma tries to delete the row? What if Emma uses an LLM or an AI agent or skill and it attempts to delete data? 
 
       ```sql
@@ -477,7 +482,7 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
       Help: https://docs.oracle.com/error-help/db/ora-41900/
       ```
 
-As you have experienced, Emma has only the privileges necessary to query, update, or delete the data we allow her to. This same security model will apply no matter how Emma's identity is used - applications, analytic tools, and AI agents or skills.
+As you have experienced, Emma has only the privileges necessary to query and update the data we allow her to. DELETE is not permitted at all. This same security model will apply no matter how Emma's identity is used — applications, analytic tools, and AI agents or skills.
 
 ## Task 6: Connect as Marvin
 
@@ -505,7 +510,7 @@ As you have experienced, Emma has only the privileges necessary to query, update
       "MARVIN"
       ```
 
-3. When Marvin runs a query, he doesn't include a `WHERE` clause either. 
+3. Like Emma, when Marvin runs a query he doesn't include a `WHERE` clause.
 
       ```sql
       <copy>
@@ -536,7 +541,7 @@ As you have experienced, Emma has only the privileges necessary to query, update
       | 3          | Emma       |             | 120000 |
       | 4          | Charlie    |             | 95000  |
       | 5          | Dana       |             | 130000 |
-      {: title="Manager-related rows returned."}
+      {: title="Manager-related rows returned"}
       
       The table has 7 employees. Marvin sees his own row because he is an employee — `HRAPP_EMPLOYEE_ACCESS` matches his identity. That result is joined with the rows returned by `HRAPP_MANAGER_ACCESS`, which matches employees who report to him. Grace, Bob, and Fiona are outside both grants entirely. The query was not written to filter by user — Oracle Database applied both data grant predicates automatically.
 
@@ -602,7 +607,7 @@ As you have experienced, Emma has only the privileges necessary to query, update
       0 rows updated.
       ```
 
-    No error — but no rows changed. Oracle Database silently blocks the update because the data grant does not include `UPDATE(phone_number)`. Even if an AI agent were tricked into generating this statement, the database enforces the boundary.
+    No error — but no rows changed. Oracle Database silently blocks the update because the data grant does not include `UPDATE(phone_number)`. As with Emma's salary update, the silent 0-rows result is intentional — it avoids leaking information about which columns are restricted.
 
 8. What if Marvin tries to delete the row like Emma attempted? 
 
@@ -620,7 +625,7 @@ As you have experienced, Emma has only the privileges necessary to query, update
       Help: https://docs.oracle.com/error-help/db/ora-41900/
       ```
 
-Again, both Marvin and Emma have only the privileges necessary to query and update the data we allow them to. This same security model will apply no matter how the end user's identity is used - applications, analytic tools, and AI agents or skills.
+Both Marvin and Emma can only query and update the specific data their grants permit. DELETE is blocked entirely for both users. This same security model applies no matter how the end user's identity is used — applications, analytic tools, and AI agents or skills.
 
 ## Task 7 (Optional): Clean Up
 
