@@ -46,7 +46,7 @@ At runtime, Oracle Database rewrites every query to add the data grant condition
 
 When an end user authenticates, Oracle Database automatically activates their `DATA ROLE`, which triggers `DATA GRANT` enforcement on every query. The database enforces the boundary — not the application, not the agent.
 
-> **Note:** Oracle Cloud IAM or Microsoft Azure Entra ID can be configured as the identity provider, and end users authenticate via OAuth2 tokens. This lab uses password-based end user authentication to focus on the Deep Data Security concepts without requiring external IdP setup. The Deep Data Security behavior is identical in both cases.
+> **Note:** Oracle Cloud IAM or Microsoft Azure Entra ID can be configured as the identity provider, and end users authenticate via OAuth2 tokens. This lab uses password-based end-user authentication to focus on the Deep Data Security concepts without requiring external IdP setup. The Deep Data Security behavior is identical in both cases.
 
 ### Prerequisites
 
