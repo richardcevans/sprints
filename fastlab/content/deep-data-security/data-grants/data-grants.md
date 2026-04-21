@@ -303,8 +303,8 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
 
       | GRANT\_NAME | PRIVILEGE | GRANTEE | PREDICATE |
       |---|---|---|---|
-      | HRAPP\_EMPLOYEES\_ACCESS | SELECT | HRAPP\_EMPLOYEES | upper(user\_name) = upper(ora\_end\_user\_context.USERNAME) |
-      | HRAPP\_EMPLOYEES\_ACCESS | UPDATE | HRAPP\_EMPLOYEES | upper(user\_name) = upper(ora\_end\_user\_context.USERNAME) |
+      | HRAPP\_EMPLOYEES\_ACCESS | SELECT | HRAPP\_EMPLOYEES | upper(user\_name) = upper(ORA\_END\_USER\_CONTEXT.username) |
+      | HRAPP\_EMPLOYEES\_ACCESS | UPDATE | HRAPP\_EMPLOYEES | upper(user\_name) = upper(ORA\_END\_USER\_CONTEXT.username) |
       | HRAPP\_MANAGER\_ACCESS | SELECT | HRAPP\_MANAGERS | manager\_id = ORA\_END\_USER\_CONTEXT.HR.EMP\_CTX.ID |
       | HRAPP\_MANAGER\_ACCESS | UPDATE | HRAPP\_MANAGERS | manager\_id = ORA\_END\_USER\_CONTEXT.HR.EMP\_CTX.ID |
       {: title="Data grants"}
