@@ -175,12 +175,11 @@ Emma's data grant predicate uses only `ORA_END_USER_CONTEXT.username` — the bu
       </copy>
       ```
 
-3. And finally, you will grant the HR schema the privileges it needs to update end-user context objects. Then create a database role that holds `EXECUTE` on the context package — this role will be granted to the data roles in the next task, enabling the `o:onFirstRead` handler function to fire.
+3. And finally, you will grant the HR schema the privilege it needs to update end-user context objects. Then create a database role that holds `EXECUTE` on the context package — this role will be granted to the data roles in the next task, enabling the `o:onFirstRead` handler function to fire.
 
       ```sql
       <copy>
       GRANT UPDATE ANY END USER CONTEXT TO HR;
-      GRANT CREATE ANY END USER CONTEXT TO HR;
 
       CREATE ROLE IF NOT EXISTS employee_context_admin;
       GRANT EXECUTE ON hr.ctx_pkg TO employee_context_admin;
