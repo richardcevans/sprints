@@ -12,7 +12,7 @@ Estimated Time: 25 minutes
 
 In this lab, you will:
 
-- Update the HR schema to use Entra ID email addresses as end user identities
+- Update the HR schema to use Entra ID email addresses as end-user identities
 - Create an end-user context with an `o:onFirstRead` handler function to load manager attributes
 - Create data roles mapped to Entra ID app roles using the `MAPPED TO` clause
 - Create data grants using both the built-in `ORA_END_USER_CONTEXT.username` and a custom context attribute
@@ -44,7 +44,7 @@ This lab assumes the following are already configured:
 
 For details regarding Oracle AI Database and Microsoft Entra ID configuration, please see the chapter titled [Oracle AI Database 26ai OCI IAM and Entra ID Configuration](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata-datab.html) in the Oracle AI Database documentation. 
 
-> **Note:** If you don't have Microsoft Entra ID, you can follow the [Identity-Driven Data Access using Oracle Deep Data Security Fastlab](../end-user-data-grants/index.html) instead. It covers the same Deep Data Security concepts using password-based end user authentication, with no external IdP required.
+> **Note:** If you don't have Microsoft Entra ID, you can follow the [Identity-Driven Data Access using Oracle Deep Data Security Fastlab](../end-user-data-grants/index.html) instead. It covers the same Deep Data Security concepts using password-based end-user authentication, with no external IdP required.
 
 ## Task 1: Drop End Users
 
@@ -325,7 +325,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-2. Confirm Emma's end user identity.
+2. Confirm Emma's end-user identity.
 
       ```sql
       <copy>
@@ -339,7 +339,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       "emma@example.com"
       ```
 
-3. Verify Emma's session identity. `AUTHENTICATED_IDENTITY` shows the Entra ID email Oracle Database resolved from the token. `CURRENT_USER` shows `XS$NULL` — token-authenticated end users are not schema users. `XS$NULL` is a null placeholder used to indicate an active end user session in Oracle Deep Data Security. It has no privileges and cannot own objects.
+3. Verify Emma's session identity. `AUTHENTICATED_IDENTITY` shows the Entra ID email Oracle Database resolved from the token. `CURRENT_USER` shows `XS$NULL` — token-authenticated end users are not schema users. `XS$NULL` is a null placeholder used to indicate an active end-user session in Oracle Deep Data Security. It has no privileges and cannot own objects.
 
       ```sql
       <copy>
@@ -458,7 +458,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-9. Confirm Marvin's end user identity.
+9. Confirm Marvin's end-user identity.
 
       ```sql
       <copy>
@@ -686,7 +686,7 @@ The data grants in this lab are identical to the ones in the companion FastLab. 
 
 This lab used Microsoft Entra ID as the identity provider. The same Deep Data Security concepts — data grants, data roles, and per-user predicates — work with any OAuth2-compatible IdP, including Oracle Cloud IAM.
 
-To explore the foundational concepts without an external identity provider — including password-based end user authentication and a step-by-step introduction to data roles — see the companion FastLab:
+To explore the foundational concepts without an external identity provider — including password-based end-user authentication and a step-by-step introduction to data roles — see the companion FastLab:
 
 * [Identity-Driven Data Access using Oracle Deep Data Security](../end-user-data-grants/index.html)
  -->
