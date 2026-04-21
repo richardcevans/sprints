@@ -182,7 +182,7 @@ Emma's data grant predicate uses only `ORA_END_USER_CONTEXT.username` — the bu
       GRANT UPDATE ANY END USER CONTEXT TO HR;
       GRANT CREATE ANY END USER CONTEXT TO HR;
 
-      CREATE ROLE **IF** NOT EXISTS employee_context_admin;
+      CREATE ROLE IF NOT EXISTS employee_context_admin;
       GRANT EXECUTE ON hr.ctx_pkg TO employee_context_admin;
       </copy>
       ```
