@@ -52,7 +52,7 @@ When an end user authenticates, Oracle Database automatically activates their `D
 
 This lab is a walk-through of the technology. If you wish to follow along, you should have the following environment configured: 
 
-- An **Oracle AI Database 26ai** instance (Autonomous or on-premises)
+- An **Oracle AI Database 26ai** instance
 - You have access to a DBA account to run the setup tasks. To use a least-privilege approach instead, Task 0 walks you through creating a dedicated administrator.
 
 
@@ -76,7 +76,6 @@ GRANT CREATE ANY INDEX TO deepsec_admin;
 GRANT CREATE ROLE TO deepsec_admin;
 GRANT DROP ANY ROLE TO deepsec_admin;
 GRANT GRANT ANY ROLE TO deepsec_admin;
-GRANT GRANT ANY PRIVILEGE TO deepsec_admin;
 GRANT SELECT_CATALOG_ROLE TO deepsec_admin;
 
 -- Deep Data Security privileges (26ai)
