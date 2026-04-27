@@ -52,7 +52,7 @@ When an end user authenticates, Oracle Database automatically activates their `D
 
 This lab is a walk-through of the technology. If you wish to follow along, you should have the following environment configured: 
 
-- An **Oracle AI Database 26ai** instance (Autonomous or on-premises)
+- An **Oracle AI Database 26ai** instance
 - You have access to a DBA account to run the setup tasks. To use a least-privilege approach instead, Task 0 walks you through creating a dedicated administrator.
 - **SQL\*Plus or SQLcl** installed and accessible from your terminal (required for Tasks 5 and 6 to connect directly as end users)
 
@@ -357,8 +357,6 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
 1. Connect as Emma.
 
     > **Note:** This lab uses SQL\*Plus to connect directly as Emma, issuing the same queries an AI agent that passes her enterprise identity would issue on her behalf. The Deep Data Security enforcement is identical regardless of whether the query originates from an agent, an application, or a direct connection.
-
-    > **Note:** Replace `hrdb` with the TNS alias or Easy Connect string for your database. If you are using Autonomous Database, this is typically found in your wallet's `tnsnames.ora`.
 
     ```
     <copy>
