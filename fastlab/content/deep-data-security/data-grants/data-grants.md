@@ -688,7 +688,6 @@ To explore the foundational concepts without an external identity provider — i
 
 * [Identity-Driven Data Access using Oracle Deep Data Security](../end-user-data-grants/index.html)
 
- 
 ## Learn More
 
 * [Oracle AI Database 26ai Documentation](https://docs.oracle.com/en/database/)
