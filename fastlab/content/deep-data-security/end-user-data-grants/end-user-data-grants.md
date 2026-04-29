@@ -76,7 +76,6 @@ GRANT CREATE ANY INDEX TO deepsec_admin;
 GRANT CREATE ROLE TO deepsec_admin;
 GRANT DROP ANY ROLE TO deepsec_admin;
 GRANT GRANT ANY ROLE TO deepsec_admin;
-GRANT GRANT ANY PRIVILEGE TO deepsec_admin;
 GRANT SELECT_CATALOG_ROLE TO deepsec_admin;
 
 -- Deep Data Security privileges (26ai)
@@ -689,8 +688,6 @@ Oracle Database restricted Emma's access to only authorized data — regardless 
 
 The Trust Chain: **End user authentication → `DATA ROLE` → `DATA GRANT` enforcement.** The database enforces the boundary, not the application and not the agent.
 
-<!--
-
 ## Next Steps
 
 This lab used password-based authentication to focus on the Deep Data Security mechanics. In a production environment, end users authenticate through an enterprise identity provider — and their application roles flow in automatically via OAuth token, mapping directly to Oracle data roles.
@@ -698,12 +695,13 @@ This lab used password-based authentication to focus on the Deep Data Security m
 To see this in action with Microsoft Entra ID, try the next FastLab:
 
 * [Oracle Deep Data Security with Microsoft Entra ID](../data-grants/index.html)
- -->
 
 ## Learn More
 
 * [Oracle AI Database 26ai Documentation](https://docs.oracle.com/en/database/)
 * [Oracle Deep Data Security Configuration Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/index.html)
+* [FastLab: Oracle Deep Data Security with Microsoft Entra ID](../data-grants/index.html)
+
 
 ## Acknowledgements
 * **Author** - Roger Wigenstam, Oracle Database Security Product Management
