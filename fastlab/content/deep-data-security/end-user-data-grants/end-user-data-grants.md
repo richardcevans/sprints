@@ -1,4 +1,4 @@
-# LiveLabs FastLab: Getting Started with Oracle Deep Data Security
+# LiveLabs FastLab: Identity-Driven Data Access using Oracle Deep Data Security
 
 ## What You Will Learn
 

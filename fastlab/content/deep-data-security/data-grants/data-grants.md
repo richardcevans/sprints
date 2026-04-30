@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This lab extends the [Getting Started with Oracle Deep Data Security FastLab](../end-user-data-grants/index.html) to cover enterprise identity integration. Instead of password-based end users, Emma and Marvin authenticate through Microsoft Entra ID — and their database access is controlled automatically by the app roles in their OAuth token.
+This lab extends the [Deep Data Security FastLab](../end-user-data-grants/index.html) to cover enterprise identity integration. Instead of password-based end users, Emma and Marvin authenticate through Microsoft Entra ID — and their database access is controlled automatically by the app roles in their OAuth token.
 
 This lab also introduces a customized **end-user context** (`HR.EMP_CTX`), which allows you to enrich your data grant predicates with information about the user and their session. To filter Marvin's view to his direct reports, the database needs his `employee_id` — not just his username. The end-user context loads that value lazily, on the first query that needs it.
 
@@ -38,7 +38,7 @@ This lab assumes the following are already configured:
 - An **Oracle AI Database 26ai** instance (Autonomous or on-premises)
 - Microsoft Azure Entra ID configured as the identity provider. 
       - An Azure app registration with app roles defined: `EMPLOYEES` and `MANAGERS`
-      - The database objects created in the [Getting Started with Oracle Deep Data Security FastLab](../end-user-data-grants/index.html)
+      - The database objects created in the [Identity-Driven Data Access using Oracle Deep Data Security FastLab](../end-user-data-grants/index.html)
       - The database identity provider must be configured for Microsoft Entra ID. 
       - Your `tnsnames.ora` file, or connection string, must use the `AZURE_INTERACTIVE` token type. 
 
@@ -686,13 +686,13 @@ This lab used Microsoft Entra ID as the identity provider. The same Deep Data Se
 
 To explore the foundational concepts without an external identity provider — including password-based end-user authentication and a step-by-step introduction to data roles — see the companion FastLab:
 
-* [Getting Started with Oracle Deep Data Security](../end-user-data-grants/index.html)
+* [Identity-Driven Data Access using Oracle Deep Data Security](../end-user-data-grants/index.html)
 
 ## Learn More
 
 * [Oracle AI Database 26ai Documentation](https://docs.oracle.com/en/database/)
 * [Oracle Deep Data Security Configuration Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/index.html)
-* [FastLab: Getting Started with Oracle Deep Data Security](../end-user-data-grants/index.html)
+* [FastLab: Identity-Driven Data Access using Oracle Deep Data Security](../end-user-data-grants/index.html)
 
 ## Acknowledgements
 * **Author** - Roger Wigenstam, Oracle Database Security Product Management, March 2026
