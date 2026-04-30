@@ -44,7 +44,7 @@ This lab assumes the following are already configured:
 
 For details regarding Oracle AI Database and Microsoft Entra ID configuration, please see the chapter titled [Oracle AI Database 26ai OCI IAM and Entra ID Configuration](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/authenticating-and-authorizing-microsoft-entra-id-ms-ei-users-oracle-databases-oracle-exadata-datab.html) in the Oracle AI Database documentation. 
 
-> **Note:** If you don't have Microsoft Entra ID, you can follow the [Identity-Driven Data Access using Oracle Deep Data Security Fastlab](../end-user-data-grants/index.html) instead. It covers the same Deep Data Security concepts using password-based end-user authentication, with no external IdP required.
+> **Note:** If you don't have Microsoft Entra ID, you can follow the [Getting Started with Oracle Deep Data Security FastLab](../end-user-data-grants/index.html) instead. It covers the same Deep Data Security concepts using password-based end-user authentication, with no external IdP required.
 
 ## Task 1: Drop End Users
 
