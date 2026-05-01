@@ -697,7 +697,7 @@ This lab used password-based authentication to focus on the Deep Data Security m
 
 To see this in action with Microsoft Entra ID, try the next FastLab:
 
-* [Oracle Deep Data Security with Microsoft Entra ID](../data-grants/index.html)
+* [Identity-Aware Data Access with Microsoft Entra ID and Oracle Deep Data Security](../data-grants/index.html)
  -->
 
 ## Learn More

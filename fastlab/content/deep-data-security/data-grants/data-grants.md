@@ -1,4 +1,4 @@
-# LiveLabs FastLab: Identity-Aware Database Access with Microsoft Entra ID and Oracle Deep Data Security
+# LiveLabs FastLab: Identity-Aware Data Access with Microsoft Entra ID and Oracle Deep Data Security
 
 ## Introduction
 
