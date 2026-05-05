@@ -290,7 +290,7 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
 
     The predicate (`WHERE user_name = ORA_END_USER_CONTEXT.username`) is evaluated at query time. A built-in SQL function (`ORA_END_USER_CONTEXT.username`) resolves the identity of the authenticated end user — no setup, no configuration required. When Emma runs any query on `hr.employees`, Oracle Database silently rewrites it to add this predicate.
 
-2. Create a data grant that identifies the manager of each employee. This data grant should have a limited number of columns a manager can SELECT as well as a limited number of columns they can UPDATE.
+2. Create a data grant that identifies the manager of each employee. This data grant should have a limited number of columns a manager can SELECT as well as a limited number of columns they can UPDATE. The combination of both data grants will give the manager access to their record, as an employee, and a limited number of columns for their direct reports.
 
       ```sql
       <copy>
@@ -303,8 +303,6 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
       TO hrapp_managers;
       </copy>
       ```
-
-      > Note: The combination of both data grants will give the manager access to their record, as an employee, and a limited number of columns for their direct reports. 
 
       > **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, first_name is temporarily included in the `UPDATE` DATA GRANT. This requirement should be removed in the July 2026 RU.
       

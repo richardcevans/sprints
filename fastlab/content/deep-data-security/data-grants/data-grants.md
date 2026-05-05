@@ -435,8 +435,6 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       Rollback complete.
       ```
 
-      **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, first_name is temporarily included in the `UPDATE` DATA GRANT. This requirement should be removed in the July 2026 RU.
-
 8. Emma attempts to update her salary. The data grant has no `UPDATE` on `salary`.
 
       ```sql
@@ -538,6 +536,8 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       ```
       1 row updated.
       ```
+
+      **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, first_name is temporarily included in the `UPDATE` DATA GRANT. This requirement should be removed in the July 2026 RU.      
 
 14. Marvin attempts to update his own salary. The manager data grant predicate is `WHERE manager_id = 2` — his direct reports. Marvin's own row has `manager_id = 1` (he reports to Grace), so the predicate excludes him. The employee data grant has no `UPDATE` on salary.
 
