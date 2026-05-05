@@ -279,7 +279,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       ```sql
       <copy>
       CREATE OR REPLACE DATA GRANT hr.HRAPP_MANAGER_ACCESS
-        AS SELECT (ALL COLUMNS EXCEPT ssn), UPDATE (salary, department_id)
+        AS SELECT (ALL COLUMNS EXCEPT ssn), UPDATE (salary, department_id, first_name)
         ON hr.employees
         WHERE manager_id = ORA_END_USER_CONTEXT.HR.EMP_CTX.ID
         TO HRAPP_MANAGERS;
@@ -287,6 +287,8 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       ```
 
     The predicate `WHERE manager_id = ORA_END_USER_CONTEXT.HR.EMP_CTX.ID` references the end-user context created in Task 2. When this predicate is first evaluated, it reads the `ID` attribute, which fires the `o:onFirstRead` handler function and loads the manager's `employee_id` into the context.
+
+      **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, first_name is temporarily included in the `UPDATE` DATA GRANT. This requirement should be removed in the July 2026 RU.
 
 3. Verify both data grants are in place.
 
@@ -432,6 +434,8 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       1 row updated.
       Rollback complete.
       ```
+
+      **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, first_name is temporarily included in the `UPDATE` DATA GRANT. This requirement should be removed in the July 2026 RU.
 
 8. Emma attempts to update her salary. The data grant has no `UPDATE` on `salary`.
 
