@@ -295,7 +295,7 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
       ```sql
       <copy>
       CREATE OR REPLACE DATA GRANT hr.HRAPP_MANAGER_ACCESS
-      AS SELECT (ALL COLUMNS EXCEPT ssn), UPDATE (salary, department_id)
+      AS SELECT (ALL COLUMNS EXCEPT ssn), UPDATE (salary, department_id, first_name)
       ON hr.employees
       WHERE manager_id IN (SELECT m.manager_id
                              FROM hr.managers m
@@ -304,7 +304,7 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
       </copy>
       ```
 
-      > **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, first_name is temporarily included in the `UPDATE` DATA GRANT. This requirement should be removed in the July 2026 RU.
+      > **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, `first_name` is temporarily included in the `UPDATE` DATA GRANT. This requirement is expected to be removed in the July 2026 RU.
       
 
 3. Verify the data grants are in place. The query returns 14 rows — one per column per privilege. The key rows are shown below.
@@ -593,7 +593,7 @@ As you have experienced, Emma has only the privileges necessary to query, update
       </copy>
       ```
 
-      **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, first_name is temporarily included in the `UPDATE` DATA GRANT. This requirement should be removed in the July 2026 RU.     
+      > **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, `first_name` is temporarily included in the `UPDATE` DATA GRANT. This requirement is expected to be removed in the July 2026 RU.
 
 7. What if Marvin attempts to update Emma's phone number? The data grant has no `UPDATE` privilege on the `phone_number` column.
 
