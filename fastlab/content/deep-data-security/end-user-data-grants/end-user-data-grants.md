@@ -593,6 +593,8 @@ As you have experienced, Emma has only the privileges necessary to query, update
       </copy>
       ```
 
+      **Note:** In the April 2026 Release Update (RU), columns referenced in the `WHERE` claude of a `DELETE` or `UPDATE` statement must also be included in the `UPDATE` or `DELETE` clause of the DATA GRANT For this reason, first_name is temporarily included in the `UPDATE` DATA GRANT. This requirement should be removed in the July 2026 RU.     
+
 7. What if Marvin attempts to update Emma's phone number? The data grant has no `UPDATE` privilege on the `phone_number` column.
 
       ```sql
