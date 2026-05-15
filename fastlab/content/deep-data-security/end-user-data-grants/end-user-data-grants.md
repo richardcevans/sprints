@@ -1,4 +1,4 @@
-# LiveLabs FastLab: Getting Started with Oracle Deep Data Security
+# Getting Started with Oracle Deep Data Security
 
 ## What You Will Learn
 
@@ -65,7 +65,7 @@ To enforce a least-privilege model, you can create a dedicated `DEEPSEC_ADMIN` u
 CREATE USER deepsec_admin IDENTIFIED BY Oracle123;
 
 -- Standard Oracle privileges
-GRANT CREATE SESSION TO deepsec_admin;
+GRANT CREATE SESSION TO deepsec_admin WITH ADMIN OPTION;
 GRANT CREATE USER TO deepsec_admin;
 GRANT ALTER USER TO deepsec_admin;
 GRANT DROP USER TO deepsec_admin;
@@ -699,7 +699,6 @@ To see this in action with Microsoft Entra ID, try the next FastLab:
 * [Oracle AI Database 26ai Documentation](https://docs.oracle.com/en/database/)
 * [Oracle Deep Data Security Configuration Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/index.html)
 * [FastLab: Oracle Deep Data Security with Microsoft Entra ID](../data-grants/index.html)
-
 
 ## Acknowledgements
 * **Author** - Roger Wigenstam, Oracle Database Security Product Management
