@@ -2,7 +2,7 @@
 
 ## Introduction
 
-In this FastLab, you will expose relational employee data as JSON documents and protect those documents with Oracle Deep Data Security. Emma and Marvin run the same query, but each user sees only their own JSON document.
+In this FastLab, you will expose relational employee data as JSON documents and protect those documents with Oracle Deep Data Security. Emma sees only her JSON document. Marvin sees his own document plus the documents for employees who report to him.
 
 Estimated Time: 15 minutes
 
@@ -12,8 +12,8 @@ In this lab, you will:
 
 - Create a small relational table
 - Create a JSON relational duality view
-- Create two database end users
-- Use a data grant to filter JSON documents by end-user identity
+- Create employee and manager data roles
+- Use data grants to filter JSON documents by employee and manager identity
 
 ### Prerequisites
 
@@ -78,22 +78,26 @@ The table stores employee cards as rows. The duality view exposes each row as on
     ALTER USER jsonlab QUOTA UNLIMITED ON users;
 
     CREATE TABLE jsonlab.employee_cards (
-      employee_id   NUMBER PRIMARY KEY,
-      user_name     VARCHAR2(128) NOT NULL,
-      display_name  VARCHAR2(100) NOT NULL,
-      job_title     VARCHAR2(100) NOT NULL,
-      department    VARCHAR2(60) NOT NULL,
-      salary        NUMBER(10,2) NOT NULL
+      employee_id       NUMBER PRIMARY KEY,
+      user_name         VARCHAR2(128) NOT NULL,
+      display_name      VARCHAR2(100) NOT NULL,
+      job_title         VARCHAR2(100) NOT NULL,
+      department        VARCHAR2(60) NOT NULL,
+      salary            NUMBER(10,2) NOT NULL,
+      manager_user_name VARCHAR2(128)
     );
 
     INSERT INTO jsonlab.employee_cards VALUES
-      (1, 'emma', 'Emma Baker', 'Product Manager', 'Product', 120000);
+      (1, 'grace', 'Grace Young', 'VP Engineering', 'Engineering', 235000, NULL);
 
     INSERT INTO jsonlab.employee_cards VALUES
-      (2, 'marvin', 'Marvin Morgan', 'Engineering Manager', 'Engineering', 175000);
+      (2, 'marvin', 'Marvin Morgan', 'Engineering Manager', 'Engineering', 175000, 'grace');
 
     INSERT INTO jsonlab.employee_cards VALUES
-      (3, 'dana', 'Dana Lee', 'Security Analyst', 'Security', 130000);
+      (3, 'emma', 'Emma Baker', 'Product Manager', 'Product', 120000, 'marvin');
+
+    INSERT INTO jsonlab.employee_cards VALUES
+      (4, 'dana', 'Dana Lee', 'Security Analyst', 'Security', 130000, 'marvin');
 
     COMMIT;
     </copy>
@@ -110,7 +114,8 @@ The table stores employee cards as rows. The duality view exposes each row as on
       'name'       : display_name,
       'title'      : job_title,
       'department' : department,
-      'salary'     : salary
+      'salary'     : salary,
+      'managerUserName' : manager_user_name
     }
     FROM jsonlab.employee_cards;
     </copy>
@@ -126,9 +131,9 @@ The table stores employee cards as rows. The duality view exposes each row as on
     </copy>
     ```
 
-    You should see three JSON documents.
+    You should see four JSON documents. Marvin is a manager for Emma and Dana because their documents contain `"managerUserName" : "marvin"`.
 
-## Task 3: Create End Users and a Data Role
+## Task 3: Create End Users and Data Roles
 
 End users are identities that do not own schema objects. A data role is the policy holder that you grant to those end users.
 
@@ -142,32 +147,48 @@ End users are identities that do not own schema objects. A data role is the poli
     CREATE ROLE direct_logon_role;
     GRANT CREATE SESSION TO direct_logon_role;
 
-    CREATE DATA ROLE json_app_users;
-    GRANT direct_logon_role TO json_app_users;
+    CREATE DATA ROLE HRAPP_EMPLOYEES;
+    CREATE DATA ROLE HRAPP_MANAGERS;
 
-    GRANT DATA ROLE json_app_users TO emma;
-    GRANT DATA ROLE json_app_users TO marvin;
+    GRANT DATA ROLE HRAPP_EMPLOYEES TO emma;
+    GRANT DATA ROLE HRAPP_EMPLOYEES TO marvin;
+    GRANT DATA ROLE HRAPP_MANAGERS TO marvin;
+
+    GRANT direct_logon_role TO HRAPP_EMPLOYEES;
     </copy>
     ```
 
 ## Task 4: Protect the JSON Documents
 
-Create one data grant on the duality view. The predicate extracts `userName` from each JSON document and compares it to the connected end user.
+Create two data grants on the duality view. The employee grant matches `userName`; the manager grant matches `managerUserName`.
 
-1. Create the data grant.
+1. Create the employee data grant.
 
     ```sql
     <copy>
-    CREATE OR REPLACE DATA GRANT jsonlab.employee_card_json_access
+    CREATE OR REPLACE DATA GRANT jsonlab.HRAPP_EMPLOYEE_ACCESS
       AS SELECT
       ON jsonlab.employee_card_dv
       WHERE upper(json_value(data, '$.userName' RETURNING VARCHAR2(128))) =
             upper(ORA_END_USER_CONTEXT.username)
-      TO json_app_users;
+      TO HRAPP_EMPLOYEES;
     </copy>
     ```
 
-2. Exit your administrator session.
+2. Create the JSON version of the manager data grant. This is the same idea as `HRAPP_MANAGER_ACCESS` in the relational FastLab, but the predicate reads the manager identity from the JSON document.
+
+    ```sql
+    <copy>
+    CREATE OR REPLACE DATA GRANT jsonlab.HRAPP_MANAGER_ACCESS
+      AS SELECT
+      ON jsonlab.employee_card_dv
+      WHERE upper(json_value(data, '$.managerUserName' RETURNING VARCHAR2(128))) =
+            upper(ORA_END_USER_CONTEXT.username)
+      TO HRAPP_MANAGERS;
+    </copy>
+    ```
+
+3. Exit your administrator session.
 
     ```sql
     <copy>
@@ -177,7 +198,7 @@ Create one data grant on the duality view. The predicate extracts `userName` fro
 
 ## Task 5: Query as Emma and Marvin
 
-Both users query the same JSON duality view with no user filter. Oracle Database adds the data grant predicate during execution.
+Both users query the same JSON duality view with no user filter. Oracle Database adds the employee and manager data grant predicates during execution.
 
 1. Connect as Emma and query the view.
 
@@ -195,12 +216,13 @@ Both users query the same JSON duality view with no user filter. Oracle Database
 
     ```json
     {
-      "_id" : 1,
+      "_id" : 3,
       "userName" : "emma",
       "name" : "Emma Baker",
       "title" : "Product Manager",
       "department" : "Product",
-      "salary" : 120000
+      "salary" : 120000,
+      "managerUserName" : "marvin"
     }
     ```
 
@@ -216,7 +238,24 @@ Both users query the same JSON duality view with no user filter. Oracle Database
 
     The query returns no rows.
 
-3. Connect as Marvin and run the same broad query.
+3. Count Emma's visible documents.
+
+    ```sql
+    <copy>
+    SELECT count(*) AS visible_documents
+      FROM jsonlab.employee_card_dv;
+    </copy>
+    ```
+
+    Emma sees one document: her own employee record.
+
+    ```text
+    VISIBLE_DOCUMENTS
+    -----------------
+                    1
+    ```
+
+4. Connect as Marvin and run the same broad query.
 
     ```sql
     <copy>
@@ -228,7 +267,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     </copy>
     ```
 
-    Marvin sees only Marvin's document:
+    Marvin sees his own document from `HRAPP_EMPLOYEE_ACCESS`, plus Emma and Dana's documents from `HRAPP_MANAGER_ACCESS`.
 
     ```json
     {
@@ -237,9 +276,57 @@ Both users query the same JSON duality view with no user filter. Oracle Database
       "name" : "Marvin Morgan",
       "title" : "Engineering Manager",
       "department" : "Engineering",
-      "salary" : 175000
+      "salary" : 175000,
+      "managerUserName" : "grace"
+    }
+    {
+      "_id" : 3,
+      "userName" : "emma",
+      "name" : "Emma Baker",
+      "title" : "Product Manager",
+      "department" : "Product",
+      "salary" : 120000,
+      "managerUserName" : "marvin"
+    }
+    {
+      "_id" : 4,
+      "userName" : "dana",
+      "name" : "Dana Lee",
+      "title" : "Security Analyst",
+      "department" : "Security",
+      "salary" : 130000,
+      "managerUserName" : "marvin"
     }
     ```
+
+5. Count Marvin's visible documents.
+
+    ```sql
+    <copy>
+    SELECT count(*) AS visible_documents
+      FROM jsonlab.employee_card_dv;
+    </copy>
+    ```
+
+    Marvin sees three documents: his own employee record, Emma's record, and Dana's record.
+
+    ```text
+    VISIBLE_DOCUMENTS
+    -----------------
+                    3
+    ```
+
+6. Try to force access to Grace's document.
+
+    ```sql
+    <copy>
+    SELECT json_serialize(data PRETTY) AS employee_document
+      FROM jsonlab.employee_card_dv
+     WHERE json_value(data, '$.userName') = 'grace';
+    </copy>
+    ```
+
+    The query returns no rows. Grace is Marvin's manager, but she is not Marvin's direct report, so neither `HRAPP_EMPLOYEE_ACCESS` nor `HRAPP_MANAGER_ACCESS` matches her document.
 
 ## Task 6: Clean Up
 
@@ -251,8 +338,10 @@ Run cleanup if you want to repeat the FastLab.
     <copy>
     CONNECT deepsec_admin/Oracle123
 
-    DROP DATA GRANT jsonlab.employee_card_json_access;
-    DROP DATA ROLE json_app_users;
+    DROP DATA GRANT jsonlab.HRAPP_EMPLOYEE_ACCESS;
+    DROP DATA GRANT jsonlab.HRAPP_MANAGER_ACCESS;
+    DROP DATA ROLE HRAPP_MANAGERS;
+    DROP DATA ROLE HRAPP_EMPLOYEES;
     DROP ROLE direct_logon_role;
     DROP END USER emma;
     DROP END USER marvin;
@@ -270,7 +359,7 @@ Run cleanup if you want to repeat the FastLab.
 
 ## Summary
 
-You created a JSON relational duality view and protected it with one Deep Data Security data grant. The application can query JSON documents, while the database enforces each end user's access boundary.
+You created a JSON relational duality view and protected it with Deep Data Security data grants. The employee grant matches the document's `userName`; the manager grant matches `managerUserName`. The application can query JSON documents, while the database enforces each end user's access boundary.
 
 ## Acknowledgements
 
