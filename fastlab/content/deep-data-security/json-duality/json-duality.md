@@ -70,7 +70,20 @@ Create a dedicated administrator for this FastLab. If you already have a user wi
 
 The table stores employee rows like the Deep Data Security FastLab. The duality view exposes each row as one JSON document in the `DATA` column.
 
-1. Create the schema and table.
+1. Reset the lab objects, then create the schema and table.
+
+    ```sql
+    <copy>
+    DROP DATA GRANT hr.HRAPP_EMPLOYEE_ACCESS;
+    DROP DATA GRANT hr.HRAPP_MANAGER_ACCESS;
+    DROP VIEW hr.emp_json;
+    DROP USER hr CASCADE;
+    </copy>
+    ```
+
+    Ignore errors if the objects do not exist yet.
+
+2. Create the `HR` schema and the lab table.
 
     ```sql
     <copy>
@@ -91,19 +104,31 @@ The table stores employee rows like the Deep Data Security FastLab. The duality 
       manager_user_name VARCHAR2(128)
     );
 
-    INSERT INTO hr.employees VALUES
+    INSERT INTO hr.employees (
+      employee_id, first_name, last_name, job_code, department_id, ssn,
+      phone_number, salary, user_name, manager_id, manager_user_name)
+    VALUES
       (1, 'Grace', 'Young', 'VP', 10, '111-11-1111', '555-100-0001', 235000,
        'grace', NULL, NULL);
 
-    INSERT INTO hr.employees VALUES
+    INSERT INTO hr.employees (
+      employee_id, first_name, last_name, job_code, department_id, ssn,
+      phone_number, salary, user_name, manager_id, manager_user_name)
+    VALUES
       (2, 'Marvin', 'Morgan', 'SWE_MGR', 10, '222-22-2222', '555-100-0002', 175000,
        'marvin', 1, 'grace');
 
-    INSERT INTO hr.employees VALUES
+    INSERT INTO hr.employees (
+      employee_id, first_name, last_name, job_code, department_id, ssn,
+      phone_number, salary, user_name, manager_id, manager_user_name)
+    VALUES
       (3, 'Emma', 'Baker', 'SWE2', 10, '333-33-3333', '555-100-0003', 120000,
        'emma', 2, 'marvin');
 
-    INSERT INTO hr.employees VALUES
+    INSERT INTO hr.employees (
+      employee_id, first_name, last_name, job_code, department_id, ssn,
+      phone_number, salary, user_name, manager_id, manager_user_name)
+    VALUES
       (4, 'Dana', 'Lee', 'SWE3', 10, '444-44-4444', '555-100-0004', 130000,
        'dana', 2, 'marvin');
 
@@ -111,11 +136,11 @@ The table stores employee rows like the Deep Data Security FastLab. The duality 
     </copy>
     ```
 
-2. Create the JSON relational duality view.
+3. Create the JSON relational duality view.
 
     ```sql
     <copy>
-    CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW hr.employee_dv AS
+    CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW hr.emp_json AS
     SELECT JSON {
       '_id'             : employee_id,
       'firstName'       : first_name,
@@ -133,12 +158,12 @@ The table stores employee rows like the Deep Data Security FastLab. The duality 
     </copy>
     ```
 
-3. Query the view as the administrator.
+4. Query the view as the administrator.
 
     ```sql
     <copy>
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM hr.employee_dv
+      FROM hr.emp_json
      ORDER BY json_value(data, '$._id' RETURNING NUMBER);
     </copy>
     ```
@@ -180,7 +205,7 @@ Create two data grants on the duality view. The employee grant allows `SELECT` a
     <copy>
     CREATE OR REPLACE DATA GRANT hr.HRAPP_EMPLOYEE_ACCESS
       AS SELECT, UPDATE(data)
-      ON hr.employee_dv
+      ON hr.emp_json
       WHERE upper(json_value(data, '$.userName' RETURNING VARCHAR2(128))) =
             upper(ORA_END_USER_CONTEXT.username)
       TO HRAPP_EMPLOYEES;
@@ -193,7 +218,7 @@ Create two data grants on the duality view. The employee grant allows `SELECT` a
     <copy>
     CREATE OR REPLACE DATA GRANT hr.HRAPP_MANAGER_ACCESS
       AS SELECT, UPDATE(data)
-      ON hr.employee_dv
+      ON hr.emp_json
       WHERE upper(json_value(data, '$.managerUserName' RETURNING VARCHAR2(128))) =
             upper(ORA_END_USER_CONTEXT.username)
       TO HRAPP_MANAGERS;
@@ -219,7 +244,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     CONNECT emma/Oracle123
 
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM hr.employee_dv
+      FROM hr.emp_json
      ORDER BY json_value(data, '$._id' RETURNING NUMBER);
     </copy>
     ```
@@ -247,7 +272,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```sql
     <copy>
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM hr.employee_dv
+      FROM hr.emp_json
      WHERE json_value(data, '$.userName') = 'marvin';
     </copy>
     ```
@@ -259,7 +284,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```sql
     <copy>
     SELECT count(*) AS visible_documents
-      FROM hr.employee_dv;
+      FROM hr.emp_json;
     </copy>
     ```
 
@@ -275,7 +300,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
 
     ```sql
     <copy>
-    UPDATE hr.employee_dv
+    UPDATE hr.emp_json
        SET data = json_transform(data, SET '$.phoneNumber' = '555-555-5555')
      WHERE json_value(data, '$.userName') = 'emma';
 
@@ -292,7 +317,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     CONNECT marvin/Oracle123
 
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM hr.employee_dv
+      FROM hr.emp_json
      ORDER BY json_value(data, '$._id' RETURNING NUMBER);
     </copy>
     ```
@@ -346,7 +371,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```sql
     <copy>
     SELECT count(*) AS visible_documents
-      FROM hr.employee_dv;
+      FROM hr.emp_json;
     </copy>
     ```
 
@@ -362,7 +387,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
 
     ```sql
     <copy>
-    UPDATE hr.employee_dv
+    UPDATE hr.emp_json
        SET data = json_transform(data, SET '$.departmentId' = 20)
      WHERE json_value(data, '$.userName') = 'emma';
 
@@ -377,7 +402,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```sql
     <copy>
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM hr.employee_dv
+      FROM hr.emp_json
      WHERE json_value(data, '$.userName') = 'grace';
     </copy>
     ```
@@ -388,7 +413,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
 
     ```sql
     <copy>
-    UPDATE hr.employee_dv
+    UPDATE hr.emp_json
        SET data = json_transform(data, SET '$.departmentId' = 90)
      WHERE json_value(data, '$.userName') = 'grace';
     </copy>
