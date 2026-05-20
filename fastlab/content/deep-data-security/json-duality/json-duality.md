@@ -160,14 +160,14 @@ End users are identities that do not own schema objects. A data role is the poli
 
 ## Task 4: Protect the JSON Documents
 
-Create two data grants on the duality view. The employee grant matches `userName`; the manager grant matches `managerUserName`.
+Create two data grants on the duality view. The employee grant allows `SELECT` and `UPDATE(data)` for the employee's own JSON document. The manager grant allows `SELECT` and `UPDATE(data)` for JSON documents where the connected user is the manager.
 
 1. Create the employee data grant.
 
     ```sql
     <copy>
     CREATE OR REPLACE DATA GRANT jsonlab.HRAPP_EMPLOYEE_ACCESS
-      AS SELECT
+      AS SELECT, UPDATE(data)
       ON jsonlab.employee_card_dv
       WHERE upper(json_value(data, '$.userName' RETURNING VARCHAR2(128))) =
             upper(ORA_END_USER_CONTEXT.username)
@@ -180,7 +180,7 @@ Create two data grants on the duality view. The employee grant matches `userName
     ```sql
     <copy>
     CREATE OR REPLACE DATA GRANT jsonlab.HRAPP_MANAGER_ACCESS
-      AS SELECT
+      AS SELECT, UPDATE(data)
       ON jsonlab.employee_card_dv
       WHERE upper(json_value(data, '$.managerUserName' RETURNING VARCHAR2(128))) =
             upper(ORA_END_USER_CONTEXT.username)
@@ -255,7 +255,21 @@ Both users query the same JSON duality view with no user filter. Oracle Database
                     1
     ```
 
-4. Connect as Marvin and run the same broad query.
+4. Update Emma's own JSON document, then roll back.
+
+    ```sql
+    <copy>
+    UPDATE jsonlab.employee_card_dv
+       SET data = json_transform(data, SET '$.department' = 'Product Strategy')
+     WHERE json_value(data, '$.userName') = 'emma';
+
+    ROLLBACK;
+    </copy>
+    ```
+
+    Emma can update her own document because `HRAPP_EMPLOYEE_ACCESS` includes `UPDATE(data)`.
+
+5. Connect as Marvin and run the same broad query.
 
     ```sql
     <copy>
@@ -299,7 +313,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     }
     ```
 
-5. Count Marvin's visible documents.
+6. Count Marvin's visible documents.
 
     ```sql
     <copy>
@@ -316,7 +330,21 @@ Both users query the same JSON duality view with no user filter. Oracle Database
                     3
     ```
 
-6. Try to force access to Grace's document.
+7. Update Emma's JSON document as Marvin, then roll back.
+
+    ```sql
+    <copy>
+    UPDATE jsonlab.employee_card_dv
+       SET data = json_transform(data, SET '$.department' = 'Product Strategy')
+     WHERE json_value(data, '$.userName') = 'emma';
+
+    ROLLBACK;
+    </copy>
+    ```
+
+    Marvin can update Emma's document because Emma is his direct report and `HRAPP_MANAGER_ACCESS` includes `UPDATE(data)`.
+
+8. Try to force access to Grace's document.
 
     ```sql
     <copy>
@@ -327,6 +355,18 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```
 
     The query returns no rows. Grace is Marvin's manager, but she is not Marvin's direct report, so neither `HRAPP_EMPLOYEE_ACCESS` nor `HRAPP_MANAGER_ACCESS` matches her document.
+
+9. Try to update Grace's JSON document.
+
+    ```sql
+    <copy>
+    UPDATE jsonlab.employee_card_dv
+       SET data = json_transform(data, SET '$.department' = 'Executive')
+     WHERE json_value(data, '$.userName') = 'grace';
+    </copy>
+    ```
+
+    The statement updates zero rows. Marvin has manager access to his direct reports, not to his manager.
 
 ## Task 6: Clean Up
 
@@ -359,7 +399,7 @@ Run cleanup if you want to repeat the FastLab.
 
 ## Summary
 
-You created a JSON relational duality view and protected it with Deep Data Security data grants. The employee grant matches the document's `userName`; the manager grant matches `managerUserName`. The application can query JSON documents, while the database enforces each end user's access boundary.
+You created a JSON relational duality view and protected it with Deep Data Security data grants. The employee grant matches the document's `userName`; the manager grant matches `managerUserName`. Both grants include explicit `SELECT` and `UPDATE(data)` clauses, while the database still enforces each end user's access boundary.
 
 ## Acknowledgements
 
