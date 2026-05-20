@@ -68,36 +68,44 @@ Create a dedicated administrator for this FastLab. If you already have a user wi
 
 ## Task 2: Create Relational Data and a JSON Duality View
 
-The table stores employee cards as rows. The duality view exposes each row as one JSON document in the `DATA` column.
+The table stores employee rows like the Deep Data Security FastLab. The duality view exposes each row as one JSON document in the `DATA` column.
 
 1. Create the schema and table.
 
     ```sql
     <copy>
-    CREATE USER jsonlab NO AUTHENTICATION DEFAULT TABLESPACE users;
-    ALTER USER jsonlab QUOTA UNLIMITED ON users;
+    CREATE USER hr NO AUTHENTICATION DEFAULT TABLESPACE users;
+    ALTER USER hr QUOTA UNLIMITED ON users;
 
-    CREATE TABLE jsonlab.employee_cards (
+    CREATE TABLE hr.employees (
       employee_id       NUMBER PRIMARY KEY,
+      first_name        VARCHAR2(50) NOT NULL,
+      last_name         VARCHAR2(50) NOT NULL,
+      job_code          VARCHAR2(10) NOT NULL,
+      department_id     NUMBER,
+      ssn               VARCHAR2(20),
+      phone_number      VARCHAR2(30),
+      salary            NUMBER(10,2),
       user_name         VARCHAR2(128) NOT NULL,
-      display_name      VARCHAR2(100) NOT NULL,
-      job_title         VARCHAR2(100) NOT NULL,
-      department        VARCHAR2(60) NOT NULL,
-      salary            NUMBER(10,2) NOT NULL,
+      manager_id        NUMBER,
       manager_user_name VARCHAR2(128)
     );
 
-    INSERT INTO jsonlab.employee_cards VALUES
-      (1, 'grace', 'Grace Young', 'VP Engineering', 'Engineering', 235000, NULL);
+    INSERT INTO hr.employees VALUES
+      (1, 'Grace', 'Young', 'VP', 10, '111-11-1111', '555-100-0001', 235000,
+       'grace', NULL, NULL);
 
-    INSERT INTO jsonlab.employee_cards VALUES
-      (2, 'marvin', 'Marvin Morgan', 'Engineering Manager', 'Engineering', 175000, 'grace');
+    INSERT INTO hr.employees VALUES
+      (2, 'Marvin', 'Morgan', 'SWE_MGR', 10, '222-22-2222', '555-100-0002', 175000,
+       'marvin', 1, 'grace');
 
-    INSERT INTO jsonlab.employee_cards VALUES
-      (3, 'emma', 'Emma Baker', 'Product Manager', 'Product', 120000, 'marvin');
+    INSERT INTO hr.employees VALUES
+      (3, 'Emma', 'Baker', 'SWE2', 10, '333-33-3333', '555-100-0003', 120000,
+       'emma', 2, 'marvin');
 
-    INSERT INTO jsonlab.employee_cards VALUES
-      (4, 'dana', 'Dana Lee', 'Security Analyst', 'Security', 130000, 'marvin');
+    INSERT INTO hr.employees VALUES
+      (4, 'Dana', 'Lee', 'SWE3', 10, '444-44-4444', '555-100-0004', 130000,
+       'dana', 2, 'marvin');
 
     COMMIT;
     </copy>
@@ -107,17 +115,21 @@ The table stores employee cards as rows. The duality view exposes each row as on
 
     ```sql
     <copy>
-    CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW jsonlab.employee_card_dv AS
+    CREATE OR REPLACE JSON RELATIONAL DUALITY VIEW hr.employee_dv AS
     SELECT JSON {
-      '_id'        : employee_id,
-      'userName'   : user_name,
-      'name'       : display_name,
-      'title'      : job_title,
-      'department' : department,
-      'salary'     : salary,
+      '_id'             : employee_id,
+      'firstName'       : first_name,
+      'lastName'        : last_name,
+      'jobCode'         : job_code,
+      'departmentId'    : department_id,
+      'ssn'             : ssn,
+      'phoneNumber'     : phone_number,
+      'salary'          : salary,
+      'userName'        : user_name,
+      'managerId'       : manager_id,
       'managerUserName' : manager_user_name
     }
-    FROM jsonlab.employee_cards;
+    FROM hr.employees;
     </copy>
     ```
 
@@ -126,7 +138,7 @@ The table stores employee cards as rows. The duality view exposes each row as on
     ```sql
     <copy>
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM jsonlab.employee_card_dv
+      FROM hr.employee_dv
      ORDER BY json_value(data, '$._id' RETURNING NUMBER);
     </copy>
     ```
@@ -166,9 +178,9 @@ Create two data grants on the duality view. The employee grant allows `SELECT` a
 
     ```sql
     <copy>
-    CREATE OR REPLACE DATA GRANT jsonlab.HRAPP_EMPLOYEE_ACCESS
+    CREATE OR REPLACE DATA GRANT hr.HRAPP_EMPLOYEE_ACCESS
       AS SELECT, UPDATE(data)
-      ON jsonlab.employee_card_dv
+      ON hr.employee_dv
       WHERE upper(json_value(data, '$.userName' RETURNING VARCHAR2(128))) =
             upper(ORA_END_USER_CONTEXT.username)
       TO HRAPP_EMPLOYEES;
@@ -179,9 +191,9 @@ Create two data grants on the duality view. The employee grant allows `SELECT` a
 
     ```sql
     <copy>
-    CREATE OR REPLACE DATA GRANT jsonlab.HRAPP_MANAGER_ACCESS
+    CREATE OR REPLACE DATA GRANT hr.HRAPP_MANAGER_ACCESS
       AS SELECT, UPDATE(data)
-      ON jsonlab.employee_card_dv
+      ON hr.employee_dv
       WHERE upper(json_value(data, '$.managerUserName' RETURNING VARCHAR2(128))) =
             upper(ORA_END_USER_CONTEXT.username)
       TO HRAPP_MANAGERS;
@@ -207,7 +219,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     CONNECT emma/Oracle123
 
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM jsonlab.employee_card_dv
+      FROM hr.employee_dv
      ORDER BY json_value(data, '$._id' RETURNING NUMBER);
     </copy>
     ```
@@ -217,11 +229,15 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```json
     {
       "_id" : 3,
-      "userName" : "emma",
-      "name" : "Emma Baker",
-      "title" : "Product Manager",
-      "department" : "Product",
+      "firstName" : "Emma",
+      "lastName" : "Baker",
+      "jobCode" : "SWE2",
+      "departmentId" : 10,
+      "ssn" : "333-33-3333",
+      "phoneNumber" : "555-100-0003",
       "salary" : 120000,
+      "userName" : "emma",
+      "managerId" : 2,
       "managerUserName" : "marvin"
     }
     ```
@@ -231,7 +247,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```sql
     <copy>
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM jsonlab.employee_card_dv
+      FROM hr.employee_dv
      WHERE json_value(data, '$.userName') = 'marvin';
     </copy>
     ```
@@ -243,7 +259,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```sql
     <copy>
     SELECT count(*) AS visible_documents
-      FROM jsonlab.employee_card_dv;
+      FROM hr.employee_dv;
     </copy>
     ```
 
@@ -259,8 +275,8 @@ Both users query the same JSON duality view with no user filter. Oracle Database
 
     ```sql
     <copy>
-    UPDATE jsonlab.employee_card_dv
-       SET data = json_transform(data, SET '$.department' = 'Product Strategy')
+    UPDATE hr.employee_dv
+       SET data = json_transform(data, SET '$.phoneNumber' = '555-555-5555')
      WHERE json_value(data, '$.userName') = 'emma';
 
     ROLLBACK;
@@ -276,7 +292,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     CONNECT marvin/Oracle123
 
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM jsonlab.employee_card_dv
+      FROM hr.employee_dv
      ORDER BY json_value(data, '$._id' RETURNING NUMBER);
     </copy>
     ```
@@ -286,29 +302,41 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```json
     {
       "_id" : 2,
-      "userName" : "marvin",
-      "name" : "Marvin Morgan",
-      "title" : "Engineering Manager",
-      "department" : "Engineering",
+      "firstName" : "Marvin",
+      "lastName" : "Morgan",
+      "jobCode" : "SWE_MGR",
+      "departmentId" : 10,
+      "ssn" : "222-22-2222",
+      "phoneNumber" : "555-100-0002",
       "salary" : 175000,
+      "userName" : "marvin",
+      "managerId" : 1,
       "managerUserName" : "grace"
     }
     {
       "_id" : 3,
-      "userName" : "emma",
-      "name" : "Emma Baker",
-      "title" : "Product Manager",
-      "department" : "Product",
+      "firstName" : "Emma",
+      "lastName" : "Baker",
+      "jobCode" : "SWE2",
+      "departmentId" : 10,
+      "ssn" : "333-33-3333",
+      "phoneNumber" : "555-100-0003",
       "salary" : 120000,
+      "userName" : "emma",
+      "managerId" : 2,
       "managerUserName" : "marvin"
     }
     {
       "_id" : 4,
-      "userName" : "dana",
-      "name" : "Dana Lee",
-      "title" : "Security Analyst",
-      "department" : "Security",
+      "firstName" : "Dana",
+      "lastName" : "Lee",
+      "jobCode" : "SWE3",
+      "departmentId" : 10,
+      "ssn" : "444-44-4444",
+      "phoneNumber" : "555-100-0004",
       "salary" : 130000,
+      "userName" : "dana",
+      "managerId" : 2,
       "managerUserName" : "marvin"
     }
     ```
@@ -318,7 +346,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```sql
     <copy>
     SELECT count(*) AS visible_documents
-      FROM jsonlab.employee_card_dv;
+      FROM hr.employee_dv;
     </copy>
     ```
 
@@ -334,8 +362,8 @@ Both users query the same JSON duality view with no user filter. Oracle Database
 
     ```sql
     <copy>
-    UPDATE jsonlab.employee_card_dv
-       SET data = json_transform(data, SET '$.department' = 'Product Strategy')
+    UPDATE hr.employee_dv
+       SET data = json_transform(data, SET '$.departmentId' = 20)
      WHERE json_value(data, '$.userName') = 'emma';
 
     ROLLBACK;
@@ -349,7 +377,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     ```sql
     <copy>
     SELECT json_serialize(data PRETTY) AS employee_document
-      FROM jsonlab.employee_card_dv
+      FROM hr.employee_dv
      WHERE json_value(data, '$.userName') = 'grace';
     </copy>
     ```
@@ -360,8 +388,8 @@ Both users query the same JSON duality view with no user filter. Oracle Database
 
     ```sql
     <copy>
-    UPDATE jsonlab.employee_card_dv
-       SET data = json_transform(data, SET '$.department' = 'Executive')
+    UPDATE hr.employee_dv
+       SET data = json_transform(data, SET '$.departmentId' = 90)
      WHERE json_value(data, '$.userName') = 'grace';
     </copy>
     ```
@@ -378,8 +406,8 @@ Run cleanup if you want to repeat the FastLab.
     <copy>
     CONNECT deepsec_admin/Oracle123
 
-    DROP DATA GRANT jsonlab.HRAPP_EMPLOYEE_ACCESS;
-    DROP DATA GRANT jsonlab.HRAPP_MANAGER_ACCESS;
+    DROP DATA GRANT hr.HRAPP_EMPLOYEE_ACCESS;
+    DROP DATA GRANT hr.HRAPP_MANAGER_ACCESS;
     DROP DATA ROLE HRAPP_MANAGERS;
     DROP DATA ROLE HRAPP_EMPLOYEES;
     DROP ROLE direct_logon_role;
@@ -392,7 +420,7 @@ Run cleanup if you want to repeat the FastLab.
 
     ```sql
     <copy>
-    DROP USER jsonlab CASCADE;
+    DROP USER hr CASCADE;
     DROP USER deepsec_admin CASCADE;
     </copy>
     ```
