@@ -197,30 +197,28 @@ End users are identities that do not own schema objects. A data role is the poli
 
 ## Task 4: Protect the JSON Documents
 
-Create two data grants on the duality view. The employee grant allows `SELECT` and `UPDATE(data)` for the employee's own JSON document. The manager grant allows `SELECT` and `UPDATE(data)` for JSON documents where the connected user is the manager.
+Create two data grants on the base table. The JSON duality view reads from `hr.employees`, so the database enforces these grants when end users query or update JSON documents through `hr.emp_json`.
 
 1. Create the employee data grant.
 
     ```sql
     <copy>
     CREATE OR REPLACE DATA GRANT hr.HRAPP_EMPLOYEE_ACCESS
-      AS SELECT, UPDATE(data)
-      ON hr.emp_json
-      WHERE upper(json_value(data, '$.userName' RETURNING VARCHAR2(128))) =
-            upper(ORA_END_USER_CONTEXT.username)
+      AS SELECT, UPDATE(phone_number, first_name)
+      ON hr.employees
+      WHERE upper(user_name) = upper(ORA_END_USER_CONTEXT.username)
       TO HRAPP_EMPLOYEES;
     </copy>
     ```
 
-2. Create the JSON version of the manager data grant. This is the same idea as `HRAPP_MANAGER_ACCESS` in the relational FastLab, but the predicate reads the manager identity from the JSON document.
+2. Create the manager data grant on the base table. Managers can read direct reports, except for SSNs, and update the same columns used in the relational FastLab.
 
     ```sql
     <copy>
     CREATE OR REPLACE DATA GRANT hr.HRAPP_MANAGER_ACCESS
-      AS SELECT, UPDATE(data)
-      ON hr.emp_json
-      WHERE upper(json_value(data, '$.managerUserName' RETURNING VARCHAR2(128))) =
-            upper(ORA_END_USER_CONTEXT.username)
+      AS SELECT (ALL COLUMNS EXCEPT ssn), UPDATE(salary, department_id, first_name)
+      ON hr.employees
+      WHERE upper(manager_user_name) = upper(ORA_END_USER_CONTEXT.username)
       TO HRAPP_MANAGERS;
     </copy>
     ```
@@ -235,7 +233,7 @@ Create two data grants on the duality view. The employee grant allows `SELECT` a
 
 ## Task 5: Query as Emma and Marvin
 
-Both users query the same JSON duality view with no user filter. Oracle Database adds the employee and manager data grant predicates during execution.
+Both users query the same JSON duality view with no user filter. Oracle Database applies the data grants on the `hr.employees` base table during execution.
 
 1. Connect as Emma and query the view.
 
@@ -308,7 +306,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     </copy>
     ```
 
-    Emma can update her own document because `HRAPP_EMPLOYEE_ACCESS` includes `UPDATE(data)`.
+    Emma can update her own phone number through the JSON document because `HRAPP_EMPLOYEE_ACCESS` includes `UPDATE(phone_number)`.
 
 5. Connect as Marvin and run the same broad query.
 
@@ -344,7 +342,6 @@ Both users query the same JSON duality view with no user filter. Oracle Database
       "lastName" : "Baker",
       "jobCode" : "SWE2",
       "departmentId" : 10,
-      "ssn" : "333-33-3333",
       "phoneNumber" : "555-100-0003",
       "salary" : 120000,
       "userName" : "emma",
@@ -357,7 +354,6 @@ Both users query the same JSON duality view with no user filter. Oracle Database
       "lastName" : "Lee",
       "jobCode" : "SWE3",
       "departmentId" : 10,
-      "ssn" : "444-44-4444",
       "phoneNumber" : "555-100-0004",
       "salary" : 130000,
       "userName" : "dana",
@@ -395,7 +391,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     </copy>
     ```
 
-    Marvin can update Emma's document because Emma is his direct report and `HRAPP_MANAGER_ACCESS` includes `UPDATE(data)`.
+    Marvin can update Emma's department through the JSON document because Emma is his direct report and `HRAPP_MANAGER_ACCESS` includes `UPDATE(department_id)`.
 
 8. Try to force access to Grace's document.
 
@@ -452,7 +448,7 @@ Run cleanup if you want to repeat the FastLab.
 
 ## Summary
 
-You created a JSON relational duality view and protected it with Deep Data Security data grants. The employee grant matches the document's `userName`; the manager grant matches `managerUserName`. Both grants include explicit `SELECT` and `UPDATE(data)` clauses, while the database still enforces each end user's access boundary.
+You created a JSON relational duality view and protected it with Deep Data Security data grants on the `hr.employees` base table. The employee grant matches `user_name` and allows `SELECT` plus `UPDATE(phone_number, first_name)`. The manager grant matches `manager_user_name` and allows `SELECT (ALL COLUMNS EXCEPT ssn)` plus `UPDATE(salary, department_id, first_name)`.
 
 ## Acknowledgements
 
