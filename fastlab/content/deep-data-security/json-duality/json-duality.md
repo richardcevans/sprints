@@ -172,7 +172,7 @@ The table stores employee rows like the Deep Data Security FastLab. The duality 
 
 ## Task 3: Create End Users and Data Roles
 
-End users are identities that do not own schema objects. A data role is the policy holder that you grant to those end users.
+End users are identities that do not own schema objects. A standard database role lets them connect and resolve the JSON duality view. Data roles carry the Deep Data Security grants on the base table.
 
 1. Create Emma, Marvin, and the roles they need.
 
@@ -183,6 +183,7 @@ End users are identities that do not own schema objects. A data role is the poli
 
     CREATE ROLE direct_logon_role;
     GRANT CREATE SESSION TO direct_logon_role;
+    GRANT SELECT, UPDATE ON hr.emp_json TO direct_logon_role;
 
     CREATE DATA ROLE HRAPP_EMPLOYEES;
     CREATE DATA ROLE HRAPP_MANAGERS;
