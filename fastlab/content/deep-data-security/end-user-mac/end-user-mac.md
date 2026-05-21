@@ -275,17 +275,17 @@ When `USE DATA GRANTS ONLY` is enabled:
 
     ```sql
     <copy>
-    SELECT owner, table_name, use_data_grants_only
-      FROM dba_tables
-     WHERE owner = 'HR'
-       AND table_name = 'EMPLOYEES';
+    SELECT DISTINCT object_owner, object_name, use_data_grants_only
+      FROM dba_data_grants
+     WHERE object_owner = 'HR'
+       AND object_name = 'EMPLOYEES';
     </copy>
     ```
 
     ```text
-    OWNER  TABLE_NAME  USE_DATA_GRANTS_ONLY
-    ------ ----------- --------------------
-    HR     EMPLOYEES   ENABLED
+    OBJECT_OWNER  OBJECT_NAME  USE_DATA_GRANTS_ONLY
+    ------------  -----------  --------------------
+    HR            EMPLOYEES    TRUE
     ```
 
 ## Task 6: Verify Consistent Enforcement
