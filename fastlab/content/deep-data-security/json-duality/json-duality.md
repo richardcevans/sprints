@@ -109,29 +109,50 @@ The table stores employee rows like the Deep Data Security FastLab. The duality 
       employee_id, first_name, last_name, job_code, department_id, ssn,
       phone_number, salary, user_name, manager_id, manager_user_name)
     VALUES
-      (1, 'Grace', 'Young', 'VP', 10, '111-11-1111', '555-100-0001', 235000,
+      (1, 'Grace', 'Young', 'CEO', NULL, '111-11-1111', '555-100-0001', 235000,
        'grace', NULL, NULL);
 
     INSERT INTO hr.employees (
       employee_id, first_name, last_name, job_code, department_id, ssn,
       phone_number, salary, user_name, manager_id, manager_user_name)
     VALUES
-      (2, 'Marvin', 'Morgan', 'SWE_MGR', 10, '222-22-2222', '555-100-0002', 175000,
+      (2, 'Marvin', 'Morgan', 'SWE_MGR', 1, '222-22-2222', '555-100-0002', 175000,
        'marvin', 1, 'grace');
 
     INSERT INTO hr.employees (
       employee_id, first_name, last_name, job_code, department_id, ssn,
       phone_number, salary, user_name, manager_id, manager_user_name)
     VALUES
-      (3, 'Emma', 'Baker', 'SWE2', 10, '333-33-3333', '555-100-0003', 120000,
+      (3, 'Emma', 'Baker', 'SWE2', 1, '333-33-3333', '555-100-0003', 120000,
        'emma', 2, 'marvin');
 
     INSERT INTO hr.employees (
       employee_id, first_name, last_name, job_code, department_id, ssn,
       phone_number, salary, user_name, manager_id, manager_user_name)
     VALUES
-      (4, 'Dana', 'Lee', 'SWE3', 10, '444-44-4444', '555-100-0004', 130000,
+      (4, 'Charlie', 'Davis', 'SWE1', 1, '444-44-4444', '555-100-0004', 95000,
+       'charlie', 2, 'marvin');
+
+    INSERT INTO hr.employees (
+      employee_id, first_name, last_name, job_code, department_id, ssn,
+      phone_number, salary, user_name, manager_id, manager_user_name)
+    VALUES
+      (5, 'Dana', 'Lee', 'SWE3', 1, '555-55-5555', '555-100-0005', 130000,
        'dana', 2, 'marvin');
+
+    INSERT INTO hr.employees (
+      employee_id, first_name, last_name, job_code, department_id, ssn,
+      phone_number, salary, user_name, manager_id, manager_user_name)
+    VALUES
+      (6, 'Bob', 'Smith', 'SALES_REP', 2, '666-66-6666', '555-100-0006', 145000,
+       'bob', 1, 'grace');
+
+    INSERT INTO hr.employees (
+      employee_id, first_name, last_name, job_code, department_id, ssn,
+      phone_number, salary, user_name, manager_id, manager_user_name)
+    VALUES
+      (7, 'Fiona', 'Chen', 'HR_REP', 3, '777-77-7777', '555-100-0007', 92000,
+       'fiona', 1, 'grace');
 
     COMMIT;
     </copy>
@@ -169,7 +190,7 @@ The table stores employee rows like the Deep Data Security FastLab. The duality 
     </copy>
     ```
 
-    You should see four JSON documents. Marvin is a manager for Emma and Dana because their documents contain `"managerUserName" : "marvin"`.
+    You should see seven JSON documents. Marvin is a manager for Emma, Charlie, and Dana because their documents contain `"managerUserName" : "marvin"`.
 
 ## Task 3: Create End Users and Data Roles
 
@@ -332,7 +353,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     </copy>
     ```
 
-    Marvin sees his own document from `HRAPP_EMPLOYEE_ACCESS`, plus Emma and Dana's documents from `HRAPP_MANAGER_ACCESS`.
+    Marvin sees his own document from `HRAPP_EMPLOYEE_ACCESS`, plus Emma, Charlie, and Dana's documents from `HRAPP_MANAGER_ACCESS`.
 
     ```json
     {
@@ -340,7 +361,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
       "firstName" : "Marvin",
       "lastName" : "Morgan",
       "jobCode" : "SWE_MGR",
-      "departmentId" : 10,
+      "departmentId" : 1,
       "ssn" : "222-22-2222",
       "phoneNumber" : "555-100-0002",
       "salary" : 175000,
@@ -353,7 +374,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
       "firstName" : "Emma",
       "lastName" : "Baker",
       "jobCode" : "SWE2",
-      "departmentId" : 10,
+      "departmentId" : 1,
       "phoneNumber" : "555-100-0003",
       "salary" : 120000,
       "userName" : "emma",
@@ -362,11 +383,23 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     }
     {
       "_id" : 4,
+      "firstName" : "Charlie",
+      "lastName" : "Davis",
+      "jobCode" : "SWE1",
+      "departmentId" : 1,
+      "phoneNumber" : "555-100-0004",
+      "salary" : 95000,
+      "userName" : "charlie",
+      "managerId" : 2,
+      "managerUserName" : "marvin"
+    }
+    {
+      "_id" : 5,
       "firstName" : "Dana",
       "lastName" : "Lee",
       "jobCode" : "SWE3",
-      "departmentId" : 10,
-      "phoneNumber" : "555-100-0004",
+      "departmentId" : 1,
+      "phoneNumber" : "555-100-0005",
       "salary" : 130000,
       "userName" : "dana",
       "managerId" : 2,
@@ -383,12 +416,12 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     </copy>
     ```
 
-    Marvin sees three documents: his own employee record, Emma's record, and Dana's record.
+    Marvin sees four documents: his own employee record, Emma's record, Charlie's record, and Dana's record.
 
     ```text
     VISIBLE_DOCUMENTS
     -----------------
-                    3
+                    4
     ```
 
 7. Update Emma's JSON document as Marvin, then roll back.
