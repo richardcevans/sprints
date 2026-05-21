@@ -55,6 +55,7 @@ Create a dedicated administrator for this FastLab. If you already have a user wi
     GRANT CREATE ANY DATA GRANT TO deepsec_admin;
     GRANT DROP ANY DATA GRANT TO deepsec_admin;
     GRANT ADMINISTER ANY DATA GRANT TO deepsec_admin;
+    GRANT SET USE DATA GRANTS ONLY TO deepsec_admin;
     </copy>
     ```
 
@@ -172,7 +173,7 @@ The table stores employee rows like the Deep Data Security FastLab. The duality 
 
 ## Task 3: Create End Users and Data Roles
 
-End users are identities that do not own schema objects. A standard database role lets them connect and resolve the JSON duality view. Data roles carry the Deep Data Security grants on the base table.
+End users are identities that do not own schema objects. A standard database role lets them connect and resolve the JSON duality view. Data roles carry the Deep Data Security grants on the base table, and mandatory access control makes those grants apply through the JSON view.
 
 1. Create Emma, Marvin, and the roles they need.
 
@@ -198,7 +199,7 @@ End users are identities that do not own schema objects. A standard database rol
 
 ## Task 4: Protect the JSON Documents
 
-Create two data grants on the base table. The JSON duality view reads from `hr.employees`, so the database enforces these grants when end users query or update JSON documents through `hr.emp_json`.
+Create two data grants on the base table, then enable mandatory access control on that table. The JSON duality view reads from `hr.employees`, so mandatory access control makes the database enforce the base-table grants when end users query or update JSON documents through `hr.emp_json`.
 
 1. Create the employee data grant.
 
@@ -224,7 +225,17 @@ Create two data grants on the base table. The JSON duality view reads from `hr.e
     </copy>
     ```
 
-3. Exit your administrator session.
+3. Enable mandatory access control on the base table.
+
+    ```sql
+    <copy>
+    SET USE DATA GRANTS ONLY ON hr.employees ENABLED;
+    </copy>
+    ```
+
+    Without this setting, a standard object privilege on `hr.emp_json` could bypass the row and column restrictions on `hr.employees`. With it enabled, the base-table data grants are enforced through the JSON duality view.
+
+4. Exit your administrator session.
 
     ```sql
     <copy>
@@ -449,7 +460,7 @@ Run cleanup if you want to repeat the FastLab.
 
 ## Summary
 
-You created a JSON relational duality view and protected it with Deep Data Security data grants on the `hr.employees` base table. The employee grant matches `user_name` and allows `SELECT` plus `UPDATE(phone_number, first_name)`. The manager grant matches `manager_user_name` and allows `SELECT (ALL COLUMNS EXCEPT ssn)` plus `UPDATE(salary, department_id, first_name)`.
+You created a JSON relational duality view and protected it with Deep Data Security data grants on the `hr.employees` base table. The employee grant matches `user_name` and allows `SELECT` plus `UPDATE(phone_number, first_name)`. The manager grant matches `manager_user_name` and allows `SELECT (ALL COLUMNS EXCEPT ssn)` plus `UPDATE(salary, department_id, first_name)`. Mandatory access control on `hr.employees` makes those grants apply when users access the data through `hr.emp_json`.
 
 ## Acknowledgements
 
