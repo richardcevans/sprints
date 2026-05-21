@@ -304,7 +304,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     <copy>
     SELECT json_serialize(data PRETTY) AS employee_document
       FROM hr.emp_json
-     WHERE json_value(data, '$.userName') = 'marvin';
+     WHERE json_value(data, '$.firstName') = 'Marvin';
     </copy>
     ```
 
@@ -333,7 +333,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     <copy>
     UPDATE hr.emp_json
        SET data = json_transform(data, SET '$.phoneNumber' = '555-555-5555')
-     WHERE json_value(data, '$.userName') = 'emma';
+     WHERE json_value(data, '$.firstName') = 'Emma';
 
     ROLLBACK;
     </copy>
@@ -430,7 +430,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     <copy>
     UPDATE hr.emp_json
        SET data = json_transform(data, SET '$.departmentId' = 20)
-     WHERE json_value(data, '$.userName') = 'emma';
+     WHERE json_value(data, '$.firstName') = 'Emma';
 
     ROLLBACK;
     </copy>
@@ -444,7 +444,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     <copy>
     SELECT json_serialize(data PRETTY) AS employee_document
       FROM hr.emp_json
-     WHERE json_value(data, '$.userName') = 'grace';
+     WHERE json_value(data, '$.firstName') = 'Grace';
     </copy>
     ```
 
@@ -456,7 +456,7 @@ Both users query the same JSON duality view with no user filter. Oracle Database
     <copy>
     UPDATE hr.emp_json
        SET data = json_transform(data, SET '$.departmentId' = 90)
-     WHERE json_value(data, '$.userName') = 'grace';
+     WHERE json_value(data, '$.firstName') = 'Grace';
     </copy>
     ```
 
