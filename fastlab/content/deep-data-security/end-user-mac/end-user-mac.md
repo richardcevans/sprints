@@ -31,7 +31,7 @@ This lab is a walk-through of the technology. To run the SQL, you need:
 
 ## Task 1: Create the HR Schema and Sample Data
 
-The first task creates an `hr.employees` table with five employees. The `email` column will be used in a data grant predicate to match the authenticated end user to their own row.
+The first task creates an `hr.employees` table with five employees. The `user_name` column will be used in a data grant predicate to match the authenticated end user to their own row.
 
 > **Connection:** Run as a DBA user or your Deep Data Security administrator.
 
@@ -52,7 +52,7 @@ The first task creates an `hr.employees` table with five employees. The `email` 
       employee_id   NUMBER PRIMARY KEY,
       first_name    VARCHAR2(50),
       last_name     VARCHAR2(50),
-      email         VARCHAR2(128),
+      user_name     VARCHAR2(128),
       department_id NUMBER,
       salary        NUMBER(10,2),
       ssn           VARCHAR2(20));
@@ -80,13 +80,13 @@ The first task creates an `hr.employees` table with five employees. The `email` 
 
     ```sql
     <copy>
-    SELECT employee_id, first_name, email, salary
+    SELECT employee_id, first_name, user_name, salary
       FROM hr.employees
      ORDER BY employee_id;
     </copy>
     ```
 
-    | EMPLOYEE\_ID | FIRST\_NAME | EMAIL | SALARY |
+    | EMPLOYEE\_ID | FIRST\_NAME | USER\_NAME | SALARY |
     |---|---|---|---|
     | 1 | Victoria | victoria | 235000 |
     | 2 | Marvin | marvin | 175000 |
@@ -148,7 +148,7 @@ This task creates the security gap. Emma receives restricted access to the base 
     <copy>
     CREATE OR REPLACE DATA GRANT hr.employees_own_record
       AS SELECT ON hr.employees
-      WHERE upper(email) = upper(ORA_END_USER_CONTEXT.username)
+      WHERE upper(user_name) = upper(ORA_END_USER_CONTEXT.username)
       TO employee_role;
     </copy>
     ```
@@ -177,7 +177,7 @@ This task creates the security gap. Emma receives restricted access to the base 
 
     | OBJECT\_NAME | GRANT\_NAME | GRANTEE | PREDICATE |
     |---|---|---|---|
-    | EMPLOYEES | EMPLOYEES\_OWN\_RECORD | EMPLOYEE\_ROLE | `upper(email) = upper(ORA_END_USER_CONTEXT.username)` |
+    | EMPLOYEES | EMPLOYEES\_OWN\_RECORD | EMPLOYEE\_ROLE | `upper(user_name) = upper(ORA_END_USER_CONTEXT.username)` |
     | EMPLOYEES\_VIEW | EMPLOYEES\_VIEW\_GRANT | EMPLOYEE\_ROLE | |
     {: title="Data grants on the table and view"}
 
