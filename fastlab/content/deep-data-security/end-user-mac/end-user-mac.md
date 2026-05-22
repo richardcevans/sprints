@@ -18,6 +18,7 @@ In this lab, you will:
 - Create an Oracle Database end user and a data role.
 - Grant restricted access to the base table with a data grant.
 - Grant broad access to a view and observe the inconsistent result.
+- Identify the risky combination before users discover it through query results.
 - Enable `USE DATA GRANTS ONLY` on the base table to enforce MAC.
 - Verify that table and view access return the same authorized data.
 
@@ -181,9 +182,67 @@ This task creates the security gap. Emma receives restricted access to the base 
     | EMPLOYEES\_VIEW | EMPLOYEES\_VIEW\_GRANT | EMPLOYEE\_ROLE | |
     {: title="Data grants on the table and view"}
 
-    The table grant has a row predicate. The view grant does not. That difference is the risk you will test next.
+    The table grant has a row predicate. The view grant does not. That difference is the risk you will inspect and test next.
 
-## Task 4: Observe the Inconsistent Access
+## Task 4: Identify the Risk Before Exposure
+
+Before a user discovers inconsistent results, administrators can look for the conditions that make the exposure possible: protected tables without MAC enabled, views that depend on those tables, and different grants across those access paths.
+
+> **Connection:** Run as a DBA user or your Deep Data Security administrator.
+
+1. Find protected tables that do not have MAC enabled.
+
+    ```sql
+    <copy>
+    SELECT DISTINCT
+           object_owner,
+           object_name,
+           object_type,
+           use_data_grants_only
+      FROM dba_data_grants
+     WHERE object_type = 'TABLE'
+       AND use_data_grants_only = FALSE
+     ORDER BY object_owner, object_name;
+    </copy>
+    ```
+
+    In this lab, `HR.EMPLOYEES` appears because the table has a data grant and MAC is not enabled yet.
+
+2. Find views that depend on the protected table.
+
+    ```sql
+    <copy>
+    SELECT owner AS view_owner,
+           name  AS view_name
+      FROM dba_dependencies
+     WHERE type = 'VIEW'
+       AND referenced_owner = 'HR'
+       AND referenced_name = 'EMPLOYEES'
+     ORDER BY owner, name;
+    </copy>
+    ```
+
+    ```text
+    VIEW_OWNER  VIEW_NAME
+    ----------  --------------
+    HR          EMPLOYEES_VIEW
+    ```
+
+3. Compare the grants on the base table and the view.
+
+    ```sql
+    <copy>
+    SELECT object_name, grant_name, grantee, predicate
+      FROM dba_data_grants
+     WHERE object_owner = 'HR'
+       AND object_name IN ('EMPLOYEES', 'EMPLOYEES_VIEW')
+     ORDER BY object_name, grant_name;
+    </copy>
+    ```
+
+    The red flag is simple: the base table has a predicate, but the view does not. That means a role can have restricted access through one path and broader access through another.
+
+## Task 5: Observe the Inconsistent Access
 
 When Emma queries the base table, the table data grant restricts the result to her own row. When Emma queries the view, the view owner can access the base table and the broad view grant exposes all rows.
 
@@ -251,7 +310,7 @@ When Emma queries the base table, the table data grant restricts the result to h
 
     Emma should not see every employee record. The view has become an alternate access path that returns more data than the base table.
 
-## Task 5: Enable Mandatory Access Control
+## Task 6: Enable Mandatory Access Control
 
 Deep Data Security provides the `USE DATA GRANTS ONLY` setting to enforce a Mandatory Access Control model on a table.
 
@@ -288,7 +347,7 @@ When `USE DATA GRANTS ONLY` is enabled:
     HR            EMPLOYEES    TRUE
     ```
 
-## Task 6: Verify Consistent Enforcement
+## Task 7: Verify Consistent Enforcement
 
 Now Emma should see only her own row from both the table and the view.
 
@@ -338,7 +397,7 @@ Now Emma should see only her own row from both the table and the view.
 
     The result is now consistent. Emma cannot bypass the base-table data grant by querying the view. The database enforces the same row policy regardless of the access path.
 
-## Task 7: Clean Up (Optional)
+## Task 8: Clean Up (Optional)
 
 If you want to remove everything created in this lab, run the following steps as your DBA user or Deep Data Security administrator.
 
