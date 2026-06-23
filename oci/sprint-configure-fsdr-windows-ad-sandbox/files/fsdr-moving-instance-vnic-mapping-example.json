@@ -1,0 +1,10 @@
+{
+  "sourceVnicId": "<source_vnic_ocid>",
+  "destinationSubnetId": "<standard_recovery_subnet_ocid>",
+  "destinationNsgIdList": [
+    "<standard_recovery_nsg_ocid_1>",
+    "<standard_recovery_nsg_ocid_2>"
+  ],
+  "destinationPrimaryPrivateIpAddress": null,
+  "destinationPrimaryPrivateIpHostnameLabel": null
+}

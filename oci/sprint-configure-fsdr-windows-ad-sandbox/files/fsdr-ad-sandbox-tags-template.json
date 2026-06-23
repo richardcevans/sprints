@@ -1,0 +1,8 @@
+{
+  "FullStackDRDrill_<REGION_KEY_1>_SubnetId": "ocid1.subnet.oc1.<region-key-1>.<unique-id>",
+  "FullStackDRDrill_<REGION_KEY_1>_NSGId1": "ocid1.networksecuritygroup.oc1.<region-key-1>.<unique-id>",
+  "FullStackDRDrill_<REGION_KEY_1>_NSGId2": "ocid1.networksecuritygroup.oc1.<region-key-1>.<unique-id>",
+  "FullStackDRDrill_<REGION_KEY_2>_SubnetId": "ocid1.subnet.oc1.<region-key-2>.<unique-id>",
+  "FullStackDRDrill_<REGION_KEY_2>_NSGId1": "ocid1.networksecuritygroup.oc1.<region-key-2>.<unique-id>",
+  "FullStackDRDrill_<REGION_KEY_2>_NSGId2": "ocid1.networksecuritygroup.oc1.<region-key-2>.<unique-id>"
+}
