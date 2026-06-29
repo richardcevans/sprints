@@ -119,7 +119,7 @@ Create a paystub table that belongs to `HR` and references `HR.EMPLOYEES`. Each 
       </copy>
       ```
 
-      | PAYSTUB_ID | EMPLOYEE_ID | GROSS_PAY | NET_PAY | TAX_WITHHELD | DEDUCTIONS | BANK_ACCOUNT |
+      | PAYSTUB\_ID | EMPLOYEE\_ID | GROSS\_PAY | NET\_PAY | TAX\_WITHHELD | DEDUCTIONS | BANK\_ACCOUNT |
       |---|---|---|---|---|---|---|
       | 9101 | 1 | 9791.67 | 7050.00 | 1958.33 | 783.34 | xxxxxxx1111 |
       | 9201 | 2 | 7291.67 | 5250.00 | 1458.33 | 583.34 | xxxxxxx2222 |
@@ -177,10 +177,10 @@ The protected object in the `ON` clause is the **child**. The object in the `GRA
       </copy>
       ```
 
-      | GRANT_NAME | PRIVILEGE | OBJECT_OWNER | OBJECT_NAME | CROSS_TABLE_DATA_GRANT |
+      | GRANT\_NAME | PRIVILEGE | OBJECT\_OWNER | OBJECT\_NAME | CROSS\_TABLE\_DATA\_GRANT |
       |---|---|---|---|---|
-      | PAYSTUBS_MANAGER_ACCESS | SELECT | HR | EMP_PAYSTUBS | TRUE |
-      | PAYSTUBS_SELF_ACCESS | SELECT | HR | EMP_PAYSTUBS | TRUE |
+      | PAYSTUBS\_MANAGER\_ACCESS | SELECT | HR | EMP\_PAYSTUBS | TRUE |
+      | PAYSTUBS\_SELF\_ACCESS | SELECT | HR | EMP\_PAYSTUBS | TRUE |
       {: title="Cross-table data grants"}
 
    `CROSS_TABLE_DATA_GRANT` is `TRUE` for grants that derive child-table access from a parent object with the `WHEN ... GRANTED ON` clause.
@@ -231,7 +231,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
       </copy>
       ```
 
-      | PAYSTUB_ID | EMPLOYEE_ID | GROSS_PAY | NET_PAY | TAX_WITHHELD | DEDUCTIONS | BANK_ACCOUNT |
+      | PAYSTUB\_ID | EMPLOYEE\_ID | GROSS\_PAY | NET\_PAY | TAX\_WITHHELD | DEDUCTIONS | BANK\_ACCOUNT |
       |---|---|---|---|---|---|---|
       | 9301 | 3 | 5000.00 | 3600.00 | 1000.00 | 400.00 | xxxxxxx3333 |
       {: title="Emma's paystub"}
@@ -259,7 +259,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
       </copy>
       ```
 
-      | PAYSTUB_ID | EMPLOYEE_ID | GROSS_PAY | NET_PAY | TAX_WITHHELD | DEDUCTIONS | BANK_ACCOUNT |
+      | PAYSTUB\_ID | EMPLOYEE\_ID | GROSS\_PAY | NET\_PAY | TAX\_WITHHELD | DEDUCTIONS | BANK\_ACCOUNT |
       |---|---|---|---|---|---|---|
       | 9201 | 2 | 7291.67 | 5250.00 | 1458.33 | 583.34 | xxxxxxx2222 |
       | 9301 | 3 | 5000.00 | 3600.00 | 1000.00 | 400.00 | |
