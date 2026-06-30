@@ -6,7 +6,7 @@ This FastLab extends the Oracle Deep Data Security data grants lab to show how a
 
 A **cross-table data grant** solves that problem. It grants access to records in a child table only when the end user already has the required data privilege on the matching parent record. The grant has no `TO` clause. Access flows through the parent object's data grants at run time.
 
-Estimated Time: 15 minutes
+Estimated Time: 25 minutes
 
 ### Objectives
 
@@ -48,7 +48,7 @@ This lab assumes the following objects and end users already exist:
 - `HRAPP_EMPLOYEE_ACCESS` - a data grant that lets an employee see their own `HR.EMPLOYEES` record, including `SSN`
 - `HRAPP_MANAGER_ACCESS` - a data grant that lets a manager see direct reports in `HR.EMPLOYEES`, excluding `SSN`, and update `department_id`
 
-> **Connection:** Run Tasks 1 through 3 as a DBA user or your Deep Data Security administrator. Run Task 4 as Emma and Marvin.
+> **Connection:** Run Tasks 1 through 3 as a DBA user or your Deep Data Security administrator. Run Task 4 as Emma and Task 5 as Marvin.
 
 ## Task 1: Create a child table
 
@@ -201,11 +201,9 @@ This is hierarchical access propagation. You write the parent access policy once
 
 Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize `ORDERS`, and authorized `ORDERS` can authorize `ORDER_ITEMS`.
 
-## Task 4: Test as Emma and Marvin
+## Task 4: Test as Emma
 
-> **Before you begin:** Exit your current DBA session by typing `EXIT` and pressing Enter. This task connects as end users.
-
-### Connect as Emma
+> **Before you begin:** Exit your current DBA session by typing `EXIT` and pressing Enter. This task connects as Emma.
 
 1. Connect as Emma using the same authentication method from the prerequisite lab.
 
@@ -241,9 +239,11 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
 
    Emma sees only her own paystub. There is no data grant directly to Emma on `HR.EMP_PAYSTUBS`. The record appears because Emma can read the `SSN` column on the matching parent record in `HR.EMPLOYEES`.
 
-### Connect as Marvin
+## Task 5: Test as Marvin
 
-4. Connect as Marvin using the same authentication method from the prerequisite lab.
+> **Before you begin:** Exit Emma's session by typing `EXIT` and pressing Enter. This task connects as Marvin.
+
+1. Connect as Marvin using the same authentication method from the prerequisite lab.
 
       ```sql
       <copy>
@@ -251,7 +251,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
       </copy>
       ```
 
-5. Confirm Marvin's identity.
+2. Confirm Marvin's identity.
 
       ```sql
       <copy>
@@ -259,7 +259,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
       </copy>
       ```
 
-6. Query the child table with the same SQL Emma used.
+3. Query the child table with the same SQL Emma used.
 
       ```sql
       <copy>
@@ -280,7 +280,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
 
    Marvin sees four paystub records: his own record and his three direct reports. He sees his own `bank_account` because `PAYSTUBS_SELF_ACCESS` grants full `SELECT` through Marvin's own parent record. He does not see bank account values for Emma, Charlie, or Dana because `PAYSTUBS_MANAGER_ACCESS` excludes that child column.
 
-7. Try to query only Fiona's paystub.
+4. Try to query only Fiona's paystub.
 
       ```sql
       <copy>
@@ -296,7 +296,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
 
    Fiona has a paystub record, but Marvin does not have a qualifying parent privilege on Fiona's record in `HR.EMPLOYEES`. The child record is filtered out.
 
-## Task 5 (Optional): Clean up
+## Task 6 (Optional): Clean up
 
 Run the cleanup as a DBA user or your Deep Data Security administrator.
 
