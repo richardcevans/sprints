@@ -30,7 +30,7 @@ Most applications join multiple tables. If a paystub record belongs to an employ
 | Child object | `HR.EMP_PAYSTUBS` |
 | Own-paystub check | `WHEN SELECT(ssn) GRANTED ON HR.EMPLOYEES` |
 | Manager-paystub check | `WHEN UPDATE(department_id) GRANTED ON HR.EMPLOYEES` |
-| Join predicate | `EMP_PAYSTUBS.employee_id = EMPLOYEES.employee_id` |
+| Join predicate | `hr.emp_paystubs.employee_id = hr.employees.employee_id` |
 | Result | Paystub records appear only when matching employee records are already authorized |
 {: title="Cross-table grant model"}
 
@@ -38,13 +38,15 @@ Most applications join multiple tables. If a paystub record belongs to an employ
 
 Complete [Getting Started with Oracle Deep Data Security](../end-user-data-grants/index.html) first. This lab builds on the HR schema, end users, data roles, and base data grants created in that FastLab.
 
-This lab assumes the following objects already exist:
+This lab assumes the following objects and end users already exist:
 
 - `HR.EMPLOYEES` - a table with employee records
+- `EMMA` - an end user who represents employee Emma Baker
+- `MARVIN` - an end user who represents manager Marvin Morgan
 - `HRAPP_EMPLOYEES` - a data role for employees
 - `HRAPP_MANAGERS` - a data role for managers
-- An employee data grant that lets an employee see their own `HR.EMPLOYEES` record, including `SSN`
-- A manager data grant that lets a manager see direct reports in `HR.EMPLOYEES`, excluding `SSN`, and update `department_id`
+- `HRAPP_EMPLOYEE_ACCESS` - a data grant that lets an employee see their own `HR.EMPLOYEES` record, including `SSN`
+- `HRAPP_MANAGER_ACCESS` - a data grant that lets a manager see direct reports in `HR.EMPLOYEES`, excluding `SSN`, and update `department_id`
 
 > **Connection:** Run Tasks 1 through 3 as a DBA user or your Deep Data Security administrator. Run Task 4 as Emma and Marvin.
 
@@ -168,7 +170,7 @@ The protected object in the `ON` clause is the **child**. The object in the `GRA
 
       ```sql
       <copy>
-      SELECT grant_name, privilege, object_owner, object_name, cross_table_data_grant
+      SELECT DISTINCT grant_name, privilege, object_owner, object_name, cross_table_data_grant
         FROM dba_data_grants
        WHERE grant_name IN (
              'PAYSTUBS_SELF_ACCESS',
@@ -208,7 +210,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
 
       ```sql
       <copy>
-      sqlplus emma/Oracle123@pdb1
+      sqlplus emma/Oracle123@hrdb
       </copy>
       ```
 
@@ -244,11 +246,19 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
 
       ```sql
       <copy>
-      sqlplus marvin/Oracle123@pdb1
+      sqlplus marvin/Oracle123@hrdb
       </copy>
       ```
 
-5. Query the child table with the same SQL Emma used.
+5. Confirm Marvin's identity.
+
+      ```sql
+      <copy>
+      SELECT ORA_END_USER_CONTEXT.username FROM dual;
+      </copy>
+      ```
+
+6. Query the child table with the same SQL Emma used.
 
       ```sql
       <copy>
@@ -269,7 +279,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
 
    Marvin sees four paystub records: his own record and his three direct reports. He sees his own `bank_account` because `PAYSTUBS_SELF_ACCESS` grants full `SELECT` through Marvin's own parent record. He does not see bank account values for Emma, Charlie, or Dana because `PAYSTUBS_MANAGER_ACCESS` excludes that child column.
 
-6. Try to query only Fiona's paystub.
+7. Try to query only Fiona's paystub.
 
       ```sql
       <copy>
