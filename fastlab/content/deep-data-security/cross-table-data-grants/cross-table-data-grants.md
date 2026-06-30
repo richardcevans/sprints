@@ -170,11 +170,12 @@ The protected object in the `ON` clause is the **child**. The object in the `GRA
 
       ```sql
       <copy>
-      SELECT DISTINCT grant_name, privilege, object_owner, object_name, cross_table_data_grant
+      SELECT grant_name, privilege, object_owner, object_name, cross_table_data_grant
         FROM dba_data_grants
        WHERE grant_name IN (
              'PAYSTUBS_SELF_ACCESS',
              'PAYSTUBS_MANAGER_ACCESS')
+       GROUP BY grant_name, privilege, object_owner, object_name, cross_table_data_grant
        ORDER BY grant_name, privilege;
       </copy>
       ```
@@ -185,7 +186,7 @@ The protected object in the `ON` clause is the **child**. The object in the `GRA
       | PAYSTUBS\_SELF\_ACCESS | SELECT | HR | EMP\_PAYSTUBS | TRUE |
       {: title="Cross-table data grants"}
 
-   `CROSS_TABLE_DATA_GRANT` is `TRUE` for grants that derive child-table access from a parent object with the `WHEN ... GRANTED ON` clause.
+   `CROSS_TABLE_DATA_GRANT` is `TRUE` for grants that derive child-table access from a parent object with the `WHEN ... GRANTED ON` clause. The query groups the metadata columns because column-level grants can appear as multiple rows in `DBA_DATA_GRANTS`.
 
 ## Task 3: Understand the runtime check
 
