@@ -1,0 +1,13 @@
+{
+   "workshoptitle": "LiveLabs Sprints",
+   "help": "livelabs-help-dbmaa_us@oracle.com",
+   "tutorials": [
+      {
+         "title": "How do I configure OCI Full Stack DR for Windows instances joined to Active Directory?",
+         "description": "Learn how to configure OCI Full Stack DR moving-instance networking so Windows domain-joined servers recover into an isolated standby subnet during drills.",
+         "filename": "sprint-configure-fsdr-windows-ad-sandbox.md"
+      }
+   ],
+   "task_type": "Sections",
+   "hide_button": "true"
+}
