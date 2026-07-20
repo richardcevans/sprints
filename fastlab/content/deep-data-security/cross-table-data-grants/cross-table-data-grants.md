@@ -296,7 +296,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
 
    Fiona has a paystub record, but Marvin does not have a qualifying parent privilege on Fiona's record in `HR.EMPLOYEES`. The child record is filtered out.
 
-## Task 6 (Optional): Clean up
+## Task 6: Clean up (Optional)
 
 Run the cleanup as a DBA user or your Deep Data Security administrator.
 
@@ -330,6 +330,8 @@ You created a child table and two cross-table data grants:
 {: title="Lab components"}
 
 The key idea: **child-table access is derived, not assigned.** If parent-record access changes, child-record access changes with it.
+
+You may now proceed to the next lab.
 
 ## Learn More
 
