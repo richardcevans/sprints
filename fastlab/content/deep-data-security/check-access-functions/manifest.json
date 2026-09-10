@@ -1,0 +1,10 @@
+{
+    "workshoptitle": "LiveLabs FastLab: Access Check Functions with Oracle Deep Data Security",
+    "help": "livelabs-help-database_us@oracle.com",
+    "tutorials": [
+        {
+            "title": "FastLab: Build Authorization-Aware Application Results with Deep Data Security",
+            "filename": "deep-sec-access-check-functions.md"
+        }
+    ]
+}
