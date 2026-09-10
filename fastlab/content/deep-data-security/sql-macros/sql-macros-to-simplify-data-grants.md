@@ -27,6 +27,8 @@ The original grants contain the predicate logic directly in each `WHERE` clause.
 
 The objective of this lab is not to change the authorization model. Emma should still see one row, and Marvin should still see himself and his three direct reports. Only the way the predicates are defined will change.
 
+![Deep Data Security request flow](./images/deepsec-direct-access-architecture.png "Diagram showing an end user connecting through SQL*Plus, establishing end-user security context, issuing SQL, and receiving policy-enforced results.")
+
 ## How SQL Macros Work in Data Grants
 
 A scalar SQL macro returns SQL text that can be expanded by the SQL engine. In a data grant `WHERE` clause, the macro must evaluate to a Boolean predicate.

@@ -1,0 +1,10 @@
+{
+    "workshoptitle": "LiveLabs FastLab: SQL Macros with Oracle Deep Data Security",
+    "help": "livelabs-help-database_us@oracle.com",
+    "tutorials": [
+        {
+            "title": "FastLab: Using SQL Macros to Simplify Deep Data Security Data Grants",
+            "filename": "sql-macros-to-simplify-data-grants.md"
+        }
+    ]
+}
