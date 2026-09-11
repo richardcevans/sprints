@@ -1,4 +1,4 @@
-# Build Authorization-Aware Application Results with Deep Data Security
+# How Can Access-Check Functions Build Authorization-Aware Application Results?
 
 ## What You Will Learn
 
@@ -10,7 +10,7 @@ The lab uses the same HR scenario as the **Getting Started with Oracle Deep Data
 
 The primary version of this lab uses direct ORA_END_USER_CONTEXT.username predicates. The main exercise simulates the SQL result behind a manager dashboard or AI-copilot response; it does not build an actual agent, chatbot, API, or user interface. An optional section shows how to replace the predicates with SQL Macros without changing the access-check queries.
 
-![Architecture diagram placeholder](./images/deepsec-direct-access-architecture.png "Architecture diagram showing an end user querying Oracle Database with data grants and access-check functions.")
+![Access-check functions and Deep Data Security request flow](./images/check-access-functions-diagram.png "Diagram showing access-check functions returning protected data and authorization metadata under Oracle Deep Data Security.")
 
 Estimated Time: 20 minutes
 
