@@ -8,7 +8,7 @@ LiveLabs FastLab workshops give you clear, step-by-step instructions to help you
 
 This FastLab shows how Oracle Deep Data Security can derive access to child-table rows from privileges on matching parent rows. You will create protected employee paystubs, grant employees and managers different child-table access, and run the same query as Emma and Marvin to see the database enforce those differences.
 
-![Deep Data Security request flow](./images/deepsec-direct-access-architecture.png "Diagram showing an end user connecting through SQL*Plus, establishing end-user security context, issuing SQL, and receiving policy-enforced results.")
+![Cross-table data grants architecture](./images/deep-sec-cross-table-diagram.png "Diagram showing end-user context, a cross-table join, Oracle Deep Data Security policy enforcement, and authorized query results.")
 
 Estimated Time: 15 minutes
 
