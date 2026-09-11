@@ -290,7 +290,7 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
 
     The predicate (`WHERE user_name = ORA_END_USER_CONTEXT.username`) is evaluated at query time. A built-in SQL function (`ORA_END_USER_CONTEXT.username`) resolves the identity of the authenticated end user — no setup, no configuration required. When Emma runs any query on `hr.employees`, Oracle Database silently rewrites it to add this predicate.
 
-2. Create a data grant that identifies the manager of each employee. This data grant should have a limited number of columns a manager can SELECT as well as a limited number of columns they can UPDATE.
+2. Create a data grant that identifies the manager of each employee. This data grant should have a limited number of columns a manager can SELECT as well as a limited number of columns they can UPDATE. The combination of both data grants will give the manager access to their record, as an employee, and a limited number of columns for their direct reports.
 
       ```sql
       <copy>
@@ -303,8 +303,6 @@ Next, you will ensure that Emma and Marvin can see all of their own data and upd
       TO hrapp_managers;
       </copy>
       ```
-
-      > Note: The combination of both data grants will give the manager access to their record, as an employee, and a limited number of columns for their direct reports. 
 
 3. Verify the data grants are in place. The query returns 14 rows — one per column per privilege. The key rows are shown below.
 

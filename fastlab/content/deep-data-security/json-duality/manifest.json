@@ -1,0 +1,10 @@
+{
+    "workshoptitle": "LiveLabs FastLab - JSON Duality with Oracle Deep Data Security",
+    "help": "livelabs-help-database_us@oracle.com",
+    "tutorials": [
+        {
+            "title": "JSON Duality with Oracle Deep Data Security",
+            "filename": "json-duality.md"
+        }
+    ]
+}

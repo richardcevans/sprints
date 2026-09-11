@@ -1,0 +1,10 @@
+{
+    "workshoptitle": "LiveLabs FastLab - Enforce Mandatory Access Control with Oracle Deep Data Security",
+    "help": "livelabs-help-database_us@oracle.com",
+    "tutorials": [
+        {
+            "title": "Enforce Mandatory Access Control with Oracle Deep Data Security",
+            "filename": "end-user-mac.md"
+        }
+    ]
+}
