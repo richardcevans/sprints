@@ -1,4 +1,4 @@
-# Using SQL Macros to Simplify Deep Data Security Data Grants
+# How Can SQL Macros Simplify Deep Data Security Data Grants?
 
 ## What You Will Learn
 
@@ -27,7 +27,7 @@ The original grants contain the predicate logic directly in each `WHERE` clause.
 
 The objective of this lab is not to change the authorization model. Emma should still see one row, and Marvin should still see himself and his three direct reports. Only the way the predicates are defined will change.
 
-![Deep Data Security request flow](./images/deepsec-direct-access-architecture.png "Diagram showing an end user connecting through SQL*Plus, establishing end-user security context, issuing SQL, and receiving policy-enforced results.")
+![SQL macros and Deep Data Security request flow](./images/sql-macro-deep-sec-diagram.png "Diagram showing SQL macros defining reusable predicates for Deep Data Security data grants and enforcing row and column access for end users.")
 
 ## How SQL Macros Work in Data Grants
 
@@ -464,3 +464,15 @@ Continue with the following Deep Data Security topics:
 - Use `ORA_IS_COLUMN_AUTHORIZED` to distinguish an unauthorized `NULL` from a genuine `NULL` value.
 - Use `ORA_CHECK_DATA_PRIVILEGE` to determine whether a user can perform a specific row or column operation.
 - Review data grant behavior when users, roles, tables, views, or columns are dropped or changed.
+
+## Learn More
+
+- [Oracle Deep Data Security Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/oracle-deep-data-security-guide.pdf)
+- [Create Data Grants](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/create-data-grants.html)
+- [Oracle Database SQL Language Reference: SQL Macros](https://docs.oracle.com/en/database/oracle/oracle-database/26/lnpls/sql-macros.html)
+- [Building Trusted Generative AI Experiences with Oracle Deep Data Security](https://blogs.oracle.com/database/building-trusted-genai-experiences-with-oracle-deep-data-security)
+
+## Acknowledgements
+
+* **Author** - Richard Evans
+* **Last Updated By/Date** - September 2026
