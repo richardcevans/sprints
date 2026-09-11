@@ -1,9 +1,9 @@
 {
-    "workshoptitle": "LiveLabs FastLab: How Can Cross-Table Data Grants Protect Related Records?",
+    "workshoptitle": "LiveLabs FastLab: How Can Cross Table Data Grants Protect Related Records?",
     "help": "livelabs-help-database_us@oracle.com",
     "tutorials": [
         {
-            "title": "FastLab: How Can Cross-Table Data Grants Protect Related Records?",
+            "title": "FastLab: How Can Cross Table Data Grants Protect Related Records?",
             "filename": "cross-table-data-grants.md"
         }
     ]

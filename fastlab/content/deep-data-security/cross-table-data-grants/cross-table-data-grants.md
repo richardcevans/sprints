@@ -1,4 +1,4 @@
-# How Can Cross-Table Data Grants Protect Related Records?
+# How Can Cross Table Data Grants Protect Related Records?
 
 Welcome to this **LiveLabs FastLab** workshop.
 
@@ -8,7 +8,7 @@ LiveLabs FastLab workshops give you clear, step-by-step instructions to help you
 
 This FastLab shows how Oracle Deep Data Security can derive access to child-table rows from privileges on matching parent rows. You will create protected employee paystubs, grant employees and managers different child-table access, and run the same query as Emma and Marvin to see the database enforce those differences.
 
-![Cross-table data grants architecture](./images/deep-sec-cross-table-diagram.png "Diagram showing end-user context, a cross-table join, Oracle Deep Data Security policy enforcement, and authorized query results.")
+![Cross table data grants architecture](./images/deep-sec-cross-table-diagram.png "Diagram showing end-user context, a cross table join, Oracle Deep Data Security policy enforcement, and authorized query results.")
 
 Estimated Time: 15 minutes
 
@@ -16,17 +16,17 @@ Estimated Time: 15 minutes
 
 After this lab, you will be able to:
 
-- Explain how a cross-table data grant derives access from a parent object
-- Identify the parent object, child object, parent privilege, and join predicate in a cross-table data grant
+- Explain how a cross table data grant derives access from a parent object
+- Identify the parent object, child object, parent privilege, and join predicate in a cross table data grant
 - Use parent column privileges to model different access levels for employees and managers
-- Verify cross-table grant behavior with `DBA_DATA_GRANTS` and end-user queries
+- Verify cross table grant behavior with `DBA_DATA_GRANTS` and end-user queries
 - Describe why child-table access changes automatically when parent-record access changes
 
 ## The Challenge
 
 The previous Deep Data Security FastLab protects `HR.EMPLOYEES`. Emma can see only her own employee record. Marvin can see his own record plus his direct reports, but he cannot see their SSNs. That works for one table.
 
-Most applications join multiple tables. If a paystub record belongs to an employee, the paystub should be visible only when the current end user is authorized to see the matching employee record. A cross-table data grant lets Oracle Database enforce that relationship directly:
+Most applications join multiple tables. If a paystub record belongs to an employee, the paystub should be visible only when the current end user is authorized to see the matching employee record. A cross table data grant lets Oracle Database enforce that relationship directly:
 
 | Concept | In this lab |
 |---|---|
@@ -36,7 +36,7 @@ Most applications join multiple tables. If a paystub record belongs to an employ
 | Manager-paystub check | `WHEN UPDATE(department_id) GRANTED ON HR.EMPLOYEES` |
 | Join predicate | `hr.emp_paystubs.employee_id = hr.employees.employee_id` |
 | Result | Paystub records appear only when matching employee records are already authorized |
-{: title="Cross-table grant model"}
+{: title="Cross table grant model"}
 
 ## Prerequisites
 
@@ -54,7 +54,7 @@ This lab assumes the following objects and end users already exist:
 
 > **Connection:** Run Tasks 1 through 3 as a DBA user or your Deep Data Security administrator. Run Task 4 as Emma and Task 5 as Marvin.
 
-The account creating the cross-table grants must be allowed to create data grants in the grant-owning schema and administer data grants for both the child and parent objects. The prerequisite lab's `DEEPSEC_ADMIN` setup includes these privileges; a DBA account also qualifies.
+The account creating the cross table grants must be allowed to create data grants in the grant-owning schema and administer data grants for both the child and parent objects. The prerequisite lab's `DEEPSEC_ADMIN` setup includes these privileges; a DBA account also qualifies.
 
 ## Task 1: Create a Child Table
 
@@ -138,13 +138,13 @@ Create a paystub table that belongs to `HR` and references `HR.EMPLOYEES`. Each 
       | 9701 | 7 | 3833.33 | 2775.00 | 766.67 | 291.66 | xxxxxxx7777 |
       {: title="All paystubs before end-user enforcement"}
 
-## Task 2: Create Cross-Table Data Grants
+## Task 2: Create Cross Table Data Grants
 
-A regular data grant names its grantees with the `TO` clause (for example, `TO HRAPP_EMPLOYEES`). A cross-table data grant does not. Instead, it says: if the current end user has the required privilege on a matching parent record, grant the listed privilege on the child record.
+A regular data grant names its grantees with the `TO` clause (for example, `TO HRAPP_EMPLOYEES`). A cross table data grant does not. Instead, it says: if the current end user has the required privilege on a matching parent record, grant the listed privilege on the child record.
 
 The protected object in the `ON` clause is the **child**. The object in the `GRANTED ON` clause is the **parent**.
 
-1. Create a cross-table grant that lets employees read their own paystubs. The parent check requires `SELECT(ssn)` on `HR.EMPLOYEES`.
+1. Create a cross table grant that lets employees read their own paystubs. The parent check requires `SELECT(ssn)` on `HR.EMPLOYEES`.
 
       ```
       <copy>
@@ -158,7 +158,7 @@ The protected object in the `ON` clause is the **child**. The object in the `GRA
 
    In the prerequisite lab, employees can read `SSN` only for their own employee record. Managers can read direct-report records, but the manager data grant excludes `SSN`. That makes `SELECT(ssn)` a useful parent privilege for deriving full self-service paystub access.
 
-2. Create a second cross-table grant that lets managers read direct reports' paystubs, but excludes the `bank_account` column. The parent check requires `UPDATE(department_id)` on `HR.EMPLOYEES`.
+2. Create a second cross table grant that lets managers read direct reports' paystubs, but excludes the `bank_account` column. The parent check requires `UPDATE(department_id)` on `HR.EMPLOYEES`.
 
       ```
       <copy>
@@ -170,7 +170,7 @@ The protected object in the `ON` clause is the **child**. The object in the `GRA
       </copy>
       ```
 
-   Marvin's manager data grant from the previous FastLab allows `UPDATE(department_id)` for his direct reports in `HR.EMPLOYEES`. It does not allow that update on Marvin's own employee record. The cross-table manager grant therefore applies to Emma, Charlie, and Dana, but not to Marvin himself.
+   Marvin's manager data grant from the previous FastLab allows `UPDATE(department_id)` for his direct reports in `HR.EMPLOYEES`. It does not allow that update on Marvin's own employee record. The cross table manager grant therefore applies to Emma, Charlie, and Dana, but not to Marvin himself.
 
    `WHEN UPDATE(department_id) GRANTED ON hr.employees` is only the parent qualification. The child grant still grants `SELECT` on `hr.emp_paystubs`; it does not grant `UPDATE` on paystubs.
 
@@ -192,22 +192,22 @@ The protected object in the `ON` clause is the **child**. The object in the `GRA
       |---|---|---|---|---|
       | PAYSTUBS\_MANAGER\_ACCESS | SELECT | HR | EMP\_PAYSTUBS | TRUE |
       | PAYSTUBS\_SELF\_ACCESS | SELECT | HR | EMP\_PAYSTUBS | TRUE |
-      {: title="Cross-table data grants"}
+      {: title="Cross table data grants"}
 
    `CROSS_TABLE_DATA_GRANT` is `TRUE` for grants that derive child-table access from a parent object with the `WHEN ... GRANTED ON` clause. The query groups the metadata columns because column-level grants can appear as multiple rows in `DBA_DATA_GRANTS`.
 
 ## Task 3: Understand the Runtime Check
 
-When an end user queries `HR.EMP_PAYSTUBS`, Oracle Database evaluates the cross-table relationship at run time.
+When an end user queries `HR.EMP_PAYSTUBS`, Oracle Database evaluates the cross table relationship at run time.
 
-1. The database evaluates the cross-table grant for a candidate row in `HR.EMP_PAYSTUBS`.
+1. The database evaluates the cross table grant for a candidate row in `HR.EMP_PAYSTUBS`.
 2. The `WHERE` predicate matches that child row to a row in `HR.EMPLOYEES`.
 3. Oracle checks whether the end user has the required parent privilege on the matching parent row.
 4. If the privilege exists, the child grant contributes its listed child privilege. Otherwise, the child grant contributes no access for that row.
 
 This is hierarchical access propagation. You write the parent access policy once, then child tables inherit access through their relationship to the parent.
 
-Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize `ORDERS`, and authorized `ORDERS` can authorize `ORDER_ITEMS`.
+Cross table grants can also form chains. For example, `CUSTOMERS` can authorize `ORDERS`, and authorized `ORDERS` can authorize `ORDER_ITEMS`.
 
 ## Task 4: Test as Emma
 
@@ -308,7 +308,7 @@ Cross-table grants can also form chains. For example, `CUSTOMERS` can authorize 
 
 Run the cleanup as a DBA user or your Deep Data Security administrator.
 
-1. Drop the cross-table data grants.
+1. Drop the cross table data grants.
 
       ```sql
       <copy>
@@ -327,7 +327,7 @@ Run the cleanup as a DBA user or your Deep Data Security administrator.
 
 ## What You Built
 
-You created a child table and two cross-table data grants:
+You created a child table and two cross table data grants:
 
 | Component | Purpose |
 |---|---|
