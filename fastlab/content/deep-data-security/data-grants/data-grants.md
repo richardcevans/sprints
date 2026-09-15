@@ -65,7 +65,7 @@ The first task is to drop the existing end users you created in the previous lab
 
 ## Task 2: Reconfigure the HR schema
 
-This task will show you how to reconfigure the user_name columns from only their first name (e.g., `EMMA`) to their Microsoft Entra ID authentication identity (e.g. `emma@example.onmicrosoft.com`)
+This task will show you how to reconfigure the user\_name columns from only their first name (e.g., `EMMA`) to their Microsoft Entra ID authentication identity (e.g. `emma@example.onmicrosoft.com`)
 
 
 1. Set your Entra ID domain name. `DEFINE` creates a session variable in SQL*Plus — the `&&domain_name` syntax in subsequent queries inserts its value automatically. Replace `example.onmicrosoft.com` with your Entra ID tenant domain.
@@ -190,7 +190,7 @@ Emma's data grant predicate uses only `ORA_END_USER_CONTEXT.username` — the bu
 
 ## Task 4: Create Entra ID-mapped data roles
 
-Besides the custom end-user context, another key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DATA ROLE HRAPP_MANAGERS MAPPED TO 'azure_role=MANAGERS'`, you are telling Oracle Database: *"When you see an Entra ID token with the MANAGERS app role claim, automatically activate HRAPP_MANAGERS for that session."* No manual grants, no application logic changes — the mapping is declarative and automatic.
+Besides the custom end-user context, another key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DATA ROLE HRAPP_MANAGERS MAPPED TO 'azure_role=MANAGERS'`, you are telling Oracle Database: *"When you see an Entra ID token with the MANAGERS app role claim, automatically activate HRAPP\_MANAGERS for that session."* No manual grants, no application logic changes — the mapping is declarative and automatic.
 
 1. In the last lab, you created two data roles. You will use the same naming conventions but map them to their Entra ID app role counterparts. When the user has the Entra ID app role, they will automatically have the role in the Oracle AI Database. 
 

@@ -4,11 +4,11 @@
 
 Welcome to this **Oracle Deep Data Security LiveLabs FastLab** workshop.
 
-This FastLab shows how an application or AI-copilot backend can return both protected data and the authorization metadata needed to present that data safely. You will use the ORA_IS_COLUMN_AUTHORIZED and ORA_CHECK_DATA_PRIVILEGE SQL functions with end users, data roles, and data grants.
+This FastLab shows how an application or AI-copilot backend can return both protected data and the authorization metadata needed to present that data safely. You will use the ORA\_IS\_COLUMN\_AUTHORIZED and ORA\_CHECK\_DATA\_PRIVILEGE SQL functions with end users, data roles, and data grants.
 
 The lab uses the same HR scenario as the **Getting Started with Oracle Deep Data Security** FastLab. Emma is an employee and Marvin is her manager. Both query the same HR.EMPLOYEES table, but their data grants return different rows and columns.
 
-The primary version of this lab uses direct ORA_END_USER_CONTEXT.username predicates. The main exercise simulates the SQL result behind a manager dashboard or AI-copilot response; it does not build an actual agent, chatbot, API, or user interface. An optional section shows how to replace the predicates with SQL Macros without changing the access-check queries.
+The primary version of this lab uses direct ORA\_END\_USER\_CONTEXT.username predicates. The main exercise simulates the SQL result behind a manager dashboard or AI-copilot response; it does not build an actual agent, chatbot, API, or user interface. An optional section shows how to replace the predicates with SQL Macros without changing the access-check queries.
 
 ![Access-check functions and Deep Data Security request flow](./images/check-access-functions-diagram.png "Diagram showing access-check functions returning protected data and authorization metadata under Oracle Deep Data Security.")
 
@@ -24,24 +24,24 @@ In this lab, Marvin is the manager using an HR dashboard or asking an HR copilot
 
 The access-check functions solve these problems at query time:
 
-- ORA_IS_COLUMN_AUTHORIZED distinguishes an authorized column value from an unauthorized NULL.
-- ORA_CHECK_DATA_PRIVILEGE checks row-level and, optionally, column-level authorization for SELECT, INSERT, UPDATE, or DELETE.
+- ORA\_IS\_COLUMN\_AUTHORIZED distinguishes an authorized column value from an unauthorized NULL.
+- ORA\_CHECK\_DATA\_PRIVILEGE checks row-level and, optionally, column-level authorization for SELECT, INSERT, UPDATE, or DELETE.
 
 These functions report the authorization enforced by Deep Data Security. They do not replace data grants or provide authorization by themselves.
 
 ## How the Access Check Functions Work
 
-### ORA_IS_COLUMN_AUTHORIZED
+### ORA\_IS\_COLUMN\_AUTHORIZED
 
-ORA_IS_COLUMN_AUTHORIZED(column_reference [, privilege]) returns TRUE when the current end user can access the column value for the current row, or when the column is not protected by a data grant. It returns FALSE when the current end user is not authorized to access the column value.
+ORA\_IS\_COLUMN\_AUTHORIZED(column\_reference [, privilege]) returns TRUE when the current end user can access the column value for the current row, or when the column is not protected by a data grant. It returns FALSE when the current end user is not authorized to access the column value.
 
 The default privilege is SELECT. The column argument must be a column reference, not an expression. Qualify the column when more than one object in the query contains a column with the same name.
 
 Use this function when an application needs to replace an unauthorized NULL with a placeholder such as UNAUTHORIZED, REDACTED, or NOT AVAILABLE.
 
-### ORA_CHECK_DATA_PRIVILEGE
+### ORA\_CHECK\_DATA\_PRIVILEGE
 
-ORA_CHECK_DATA_PRIVILEGE(object, privilege [, column_reference]) returns TRUE when the privilege is granted for the current row and, when specified, the current column value. It returns FALSE when the privilege is not granted.
+ORA\_CHECK\_DATA\_PRIVILEGE(object, privilege [, column\_reference]) returns TRUE when the privilege is granted for the current row and, when specified, the current column value. It returns FALSE when the privilege is not granted.
 
 The object can be a schema-qualified object name or a table alias. The function supports SELECT, INSERT, UPDATE, and DELETE. The optional column argument cannot be combined with DELETE.
 
@@ -100,7 +100,7 @@ GRANT ADMINISTER ANY DATA GRANT TO deepsec_admin;
 </copy>
 ~~~
 
-Connect as deepsec_admin to run Tasks 1 through 7. Task 8 requires a DBA user, or an administrator with the SET USE DATA GRANTS ONLY privilege.
+Connect as deepsec\_admin to run Tasks 1 through 7. Task 8 requires a DBA user, or an administrator with the SET USE DATA GRANTS ONLY privilege.
 
 ## Task 1: Create the HR Schema and Employee Data
 
@@ -198,7 +198,7 @@ Connect as deepsec_admin to run Tasks 1 through 7. Task 8 requires a DBA user, o
    </copy>
    ~~~
 
-   | EMPLOYEE_ID | FIRST_NAME | LAST_NAME | USER_NAME | SSN | SALARY |
+   | EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | USER\_NAME | SSN | SALARY |
    |---|---|---|---|---|---:|
    | 1 | Grace | Young | grace | 111-11-1111 | 235000 |
    | 2 | Marvin | Morgan | marvin | 222-22-2222 | 175000 |
@@ -273,17 +273,17 @@ CREATE END USER marvin IDENTIFIED BY Oracle123;
    </copy>
    ~~~
 
-   | DATA_ROLE | ROLE_TYPE | GRANTEE | GRANTEE_TYPE |
+   | DATA\_ROLE | ROLE\_TYPE | GRANTEE | GRANTEE\_TYPE |
    |---|---|---|---|
-   | HRAPP_EMPLOYEES | DATA ROLE | EMMA | END USER |
-   | HRAPP_EMPLOYEES | DATA ROLE | MARVIN | END USER |
-   | HRAPP_MANAGERS | DATA ROLE | MARVIN | END USER |
-   | DIRECT_LOGON_ROLE | DATABASE ROLE | HRAPP_EMPLOYEES | DATA ROLE |
+   | HRAPP\_EMPLOYEES | DATA ROLE | EMMA | END USER |
+   | HRAPP\_EMPLOYEES | DATA ROLE | MARVIN | END USER |
+   | HRAPP\_MANAGERS | DATA ROLE | MARVIN | END USER |
+   | DIRECT\_LOGON\_ROLE | DATABASE ROLE | HRAPP\_EMPLOYEES | DATA ROLE |
    {: title="Data role grants"}
 
 ## Task 4: Create Simple Data Grant Predicates
 
-This lab intentionally starts with direct predicates based on ORA_END_USER_CONTEXT.username. The access-check functions are easier to understand when the row and column authorization model is visible without introducing another abstraction layer.
+This lab intentionally starts with direct predicates based on ORA\_END\_USER\_CONTEXT.username. The access-check functions are easier to understand when the row and column authorization model is visible without introducing another abstraction layer.
 
 > **Connection:** Run as a DBA user or your Deep Data Security administrator.
 
@@ -328,15 +328,15 @@ This lab intentionally starts with direct predicates based on ORA_END_USER_CONTE
    </copy>
    ~~~
 
-   | GRANT_NAME | PREDICATE |
+   | GRANT\_NAME | PREDICATE |
    |---|---|
-   | HRAPP_EMPLOYEE_ACCESS | upper(user_name) = upper(ORA_END_USER_CONTEXT.username) |
-   | HRAPP_MANAGER_ACCESS | manager_id IN (SELECT m.manager_id FROM hr.managers m WHERE upper(m.mgr_user_name) = upper(ORA_END_USER_CONTEXT.username)) |
+   | HRAPP\_EMPLOYEE\_ACCESS | upper(user\_name) = upper(ORA\_END\_USER\_CONTEXT.username) |
+   | HRAPP\_MANAGER\_ACCESS | manager\_id IN (SELECT m.manager\_id FROM hr.managers m WHERE upper(m.mgr\_user\_name) = upper(ORA\_END\_USER\_CONTEXT.username)) |
    {: title="Simple data grant predicates"}
 
-## Task 5: Use ORA_IS_COLUMN_AUTHORIZED as Emma
+## Task 5: Use ORA\_IS\_COLUMN\_AUTHORIZED as Emma
 
-ORA_IS_COLUMN_AUTHORIZED helps an application distinguish an unauthorized NULL from a real NULL.
+ORA\_IS\_COLUMN\_AUTHORIZED helps an application distinguish an unauthorized NULL from a real NULL.
 
 1. Connect as Emma.
 
@@ -373,12 +373,12 @@ ORA_IS_COLUMN_AUTHORIZED helps an application distinguish an unauthorized NULL f
 
    Emma sees her own row and her own SSN.
 
-   | EMPLOYEE_ID | FIRST_NAME | SSN |
+   | EMPLOYEE\_ID | FIRST\_NAME | SSN |
    |---:|---|---|
    | 3 | Emma | 333-33-3333 |
    {: title="Emma can see her own SSN"}
 
-4. Use ORA_IS_COLUMN_AUTHORIZED to expose the authorization state.
+4. Use ORA\_IS\_COLUMN\_AUTHORIZED to expose the authorization state.
 
    ~~~sql
    <copy>
@@ -396,7 +396,7 @@ ORA_IS_COLUMN_AUTHORIZED helps an application distinguish an unauthorized NULL f
 
    Emma sees:
 
-   | EMPLOYEE_ID | FIRST_NAME | SSN_FOR_DISPLAY | SSN_AUTHORIZED |
+   | EMPLOYEE\_ID | FIRST\_NAME | SSN\_FOR\_DISPLAY | SSN\_AUTHORIZED |
    |---:|---|---|---|
    | 3 | Emma | 333-33-3333 | TRUE |
    {: title="Column authorization for Emma"}
@@ -418,14 +418,14 @@ ORA_IS_COLUMN_AUTHORIZED helps an application distinguish an unauthorized NULL f
    </copy>
    ~~~
 
-   | FIRST_NAME | PHONE_UPDATE_AUTHORIZED | SALARY_UPDATE_AUTHORIZED |
+   | FIRST\_NAME | PHONE\_UPDATE\_AUTHORIZED | SALARY\_UPDATE\_AUTHORIZED |
    |---|---|---|
    | Emma | TRUE | FALSE |
    {: title="Column update authorization for Emma"}
 
-## Task 6: Use ORA_CHECK_DATA_PRIVILEGE as Emma
+## Task 6: Use ORA\_CHECK\_DATA\_PRIVILEGE as Emma
 
-ORA_CHECK_DATA_PRIVILEGE allows an application to determine which actions are available for each current row.
+ORA\_CHECK\_DATA\_PRIVILEGE allows an application to determine which actions are available for each current row.
 
 1. Check Emma's row-level and column-level privileges.
 
@@ -444,7 +444,7 @@ ORA_CHECK_DATA_PRIVILEGE allows an application to determine which actions are av
    </copy>
    ~~~
 
-   | FIRST_NAME | CAN_VIEW_ROW | CAN_UPDATE_PHONE | CAN_UPDATE_SALARY | CAN_DELETE_ROW |
+   | FIRST\_NAME | CAN\_VIEW\_ROW | CAN\_UPDATE\_PHONE | CAN\_UPDATE\_SALARY | CAN\_DELETE\_ROW |
    |---|---|---|---|---|
    | Emma | TRUE | TRUE | FALSE | FALSE |
    {: title="Emma's effective privileges"}
@@ -499,7 +499,7 @@ Marvin is an employee and a manager. His effective access is the combination of 
 
    Marvin sees his own SSN, but the SSNs for his direct reports are unauthorized:
 
-   | EMPLOYEE_ID | FIRST_NAME | SSN_FOR_DISPLAY | SSN_AUTHORIZED |
+   | EMPLOYEE\_ID | FIRST\_NAME | SSN\_FOR\_DISPLAY | SSN\_AUTHORIZED |
    |---:|---|---|---|
    | 2 | Marvin | 222-22-2222 | TRUE |
    | 3 | Emma | UNAUTHORIZED | FALSE |
@@ -527,7 +527,7 @@ Marvin is an employee and a manager. His effective access is the combination of 
    </copy>
    ~~~
 
-   | FIRST_NAME | CAN_VIEW_ROW | CAN_UPDATE_PHONE | CAN_UPDATE_SALARY | CAN_DELETE_ROW |
+   | FIRST\_NAME | CAN\_VIEW\_ROW | CAN\_UPDATE\_PHONE | CAN\_UPDATE\_SALARY | CAN\_DELETE\_ROW |
    |---|---|---|---|---|
    | Marvin | TRUE | TRUE | FALSE | FALSE |
    | Emma | TRUE | FALSE | TRUE | FALSE |
@@ -606,11 +606,11 @@ This task does not create an application or agent. It uses SQL*Plus to produce t
 
 3. Talk through how a hypothetical consumer would use the result:
 
-   - Display the row because CAN_VIEW is TRUE.
-   - Display SSN_FOR_DISPLAY instead of the raw SSN.
-   - Enable **Edit phone** only when CAN_UPDATE_PHONE is TRUE.
-   - Enable **Edit salary** only when CAN_UPDATE_SALARY is TRUE.
-   - Do not display **Delete** because CAN_DELETE is FALSE.
+   - Display the row because CAN\_VIEW is TRUE.
+   - Display SSN\_FOR\_DISPLAY instead of the raw SSN.
+   - Enable **Edit phone** only when CAN\_UPDATE\_PHONE is TRUE.
+   - Enable **Edit salary** only when CAN\_UPDATE\_SALARY is TRUE.
+   - Do not display **Delete** because CAN\_DELETE is FALSE.
 
    The database remains authoritative. These flags help a consumer make accurate presentation and workflow decisions, but a client cannot gain access by changing the flags or generating different SQL.
 
@@ -654,9 +654,9 @@ This task does not create an application or agent. It uses SQL*Plus to produce t
 
 ## Optional Variation: Use SQL Macros for the Same Grants
 
-The core lab deliberately uses direct ORA_END_USER_CONTEXT.username comparisons. If the same predicate will be reused across many data grants, you can replace the predicates with SQL Macros.
+The core lab deliberately uses direct ORA\_END\_USER\_CONTEXT.username comparisons. If the same predicate will be reused across many data grants, you can replace the predicates with SQL Macros.
 
-This variation changes only how the data grants are defined. The ORA_IS_COLUMN_AUTHORIZED and ORA_CHECK_DATA_PRIVILEGE queries in Tasks 5 through 8 remain the same.
+This variation changes only how the data grants are defined. The ORA\_IS\_COLUMN\_AUTHORIZED and ORA\_CHECK\_DATA\_PRIVILEGE queries in Tasks 5 through 8 remain the same.
 
 > **Connection:** Run as a DBA user or your Deep Data Security administrator.
 
@@ -776,12 +776,12 @@ You used Deep Data Security access-check functions to produce an authorization-a
 | Component | Purpose |
 |---|---|
 | **END USER** | emma and marvin — Oracle Database end users |
-| **DATA ROLE** | HRAPP_EMPLOYEES and HRAPP_MANAGERS — named policy holders |
-| **DATA GRANT** | HRAPP_EMPLOYEE_ACCESS — employees see their own data and can update selected columns |
-| **DATA GRANT** | HRAPP_MANAGER_ACCESS — managers see direct reports with restricted column access |
-| **ORA_END_USER_CONTEXT.username** | Simple identity value used by the primary row predicates |
-| **ORA_IS_COLUMN_AUTHORIZED** | Distinguishes authorized values from unauthorized NULL values |
-| **ORA_CHECK_DATA_PRIVILEGE** | Reports row-level and column-level capabilities for application use |
+| **DATA ROLE** | HRAPP\_EMPLOYEES and HRAPP\_MANAGERS — named policy holders |
+| **DATA GRANT** | HRAPP\_EMPLOYEE\_ACCESS — employees see their own data and can update selected columns |
+| **DATA GRANT** | HRAPP\_MANAGER\_ACCESS — managers see direct reports with restricted column access |
+| **ORA\_END\_USER\_CONTEXT.username** | Simple identity value used by the primary row predicates |
+| **ORA\_IS\_COLUMN\_AUTHORIZED** | Distinguishes authorized values from unauthorized NULL values |
+| **ORA\_CHECK\_DATA\_PRIVILEGE** | Reports row-level and column-level capabilities for application use |
 | **Authorization-aware result** | Combines protected values, safe display values, and per-row action flags |
 | **SQL Macros** | Optional predicate-reuse layer for shared data grant logic |
 {: title="Lab components"}
@@ -799,8 +799,8 @@ Try the companion FastLabs:
 ## Learn More
 
 * [Use Access Check Functions](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/use-access-check-functions.html)
-* [ORA_IS_COLUMN_AUTHORIZED](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/ora_is_column_authorized.html)
-* [ORA_CHECK_DATA_PRIVILEGE](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/ora_check_data_privilege.html)
+* [ORA\_IS\_COLUMN\_AUTHORIZED](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/ora_is_column_authorized.html)
+* [ORA\_CHECK\_DATA\_PRIVILEGE](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/ora_check_data_privilege.html)
 * [Oracle AI Database 26ai Documentation](https://docs.oracle.com/en/database/)
 * [Oracle Deep Data Security Configuration Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/index.html)
 

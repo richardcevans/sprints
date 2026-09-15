@@ -37,9 +37,11 @@ Data grant predicates support simplified scalar SQL macros. Table-valued and dyn
 
 A macro can be:
 
-- **Table-bound**, using an `ON` clause to bind unqualified column references to a specific table.
-- **Parameterized**, allowing one macro definition to be used with different values.
-- **Schema-qualified**, which is the recommended form when referencing it from a data grant.
+| Macro type | Description |
+|---|---|
+| **Table-bound** | Uses an `ON` clause to bind unqualified column references to a specific table. |
+| **Parameterized** | Allows one macro definition to be used with different values. |
+| **Schema-qualified** | Recommended when referencing a macro from a data grant. |
 
 Always include parentheses when invoking a macro, even when it has no parameters. For example:
 
@@ -85,7 +87,7 @@ SELECT DISTINCT grant_name,
 
 You should see predicates similar to these:
 
-| GRANT_NAME | PREDICATE |
+| GRANT\_NAME | PREDICATE |
 |---|---|
 | `HRAPP_EMPLOYEE_ACCESS` | `upper(user_name) = upper(ORA_END_USER_CONTEXT.username)` |
 | `HRAPP_MANAGER_ACCESS` | `manager_id IN (SELECT ... FROM hr.managers ...)` |
@@ -256,7 +258,7 @@ SELECT employee_id,
 
 Emma should still see only her own row, including her own SSN and salary.
 
-| EMPLOYEE_ID | FIRST_NAME | LAST_NAME | SSN | SALARY |
+| EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | SSN | SALARY |
 |---:|---|---|---|---:|
 | 3 | Emma | Baker | 333-33-3333 | 120000 |
 
@@ -305,7 +307,7 @@ SELECT employee_id,
 
 Marvin should still see four rows: his own row and the rows for Emma, Charlie, and Dana. The manager grant excludes SSNs for his direct reports, while the employee grant allows Marvin to see his own SSN.
 
-| EMPLOYEE_ID | FIRST_NAME | LAST_NAME | SSN | SALARY |
+| EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | SSN | SALARY |
 |---:|---|---|---|---:|
 | 2 | Marvin | Morgan | 222-22-2222 | 175000 |
 | 3 | Emma | Baker | *NULL* | 120000 |
