@@ -12,7 +12,7 @@ The primary version of this lab uses direct ORA_END_USER_CONTEXT.username predic
 
 ![Access-check functions and Deep Data Security request flow](./images/check-access-functions-diagram.png "Diagram showing access-check functions returning protected data and authorization metadata under Oracle Deep Data Security.")
 
-Estimated Time: 20 minutes
+Estimated Time: 15 minutes
 
 ## The Challenge
 
