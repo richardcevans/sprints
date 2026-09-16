@@ -65,7 +65,7 @@ The first task is to drop the existing end users you created in the previous lab
 
 ## Task 2: Reconfigure the HR schema
 
-This task will show you how to reconfigure the user\_name columns from only their first name (e.g., `EMMA`) to their Microsoft Entra ID authentication identity (e.g. `emma@example.onmicrosoft.com`)
+This task will show you how to reconfigure the `user_name` columns from only their first name (e.g., `EMMA`) to their Microsoft Entra ID authentication identity (e.g. `emma@example.onmicrosoft.com`)
 
 
 1. Set your Entra ID domain name. `DEFINE` creates a session variable in SQL*Plus — the `&&domain_name` syntax in subsequent queries inserts its value automatically. Replace `example.onmicrosoft.com` with your Entra ID tenant domain.
@@ -102,7 +102,7 @@ This task will show you how to reconfigure the user\_name columns from only thei
       </copy>
       ```
 
-      | EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | USER\_NAME | SSN | SALARY | MANAGER\_ID |
+      | `EMPLOYEE_ID` | `FIRST_NAME` | `LAST_NAME` | `USER_NAME` | SSN | SALARY | `MANAGER_ID` |
       |---|---|---|---|---|---|---|
       | 1 | Grace | Young | grace@example.com | 111-11-1111 | 235000 | |
       | 2 | Marvin | Morgan | marvin@example.com | 222-22-2222 | 175000 | 1 |
@@ -190,7 +190,7 @@ Emma's data grant predicate uses only `ORA_END_USER_CONTEXT.username` — the bu
 
 ## Task 4: Create Entra ID-mapped data roles
 
-Besides the custom end-user context, another key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DATA ROLE HRAPP_MANAGERS MAPPED TO 'azure_role=MANAGERS'`, you are telling Oracle Database: *"When you see an Entra ID token with the MANAGERS app role claim, automatically activate HRAPP\_MANAGERS for that session."* No manual grants, no application logic changes — the mapping is declarative and automatic.
+Besides the custom end-user context, another key feature of this lab is the `MAPPED TO` clause. When you write `CREATE DATA ROLE HRAPP_MANAGERS MAPPED TO 'azure_role=MANAGERS'`, you are telling Oracle Database: *"When you see an Entra ID token with the MANAGERS app role claim, automatically activate `HRAPP_MANAGERS` for that session."* No manual grants, no application logic changes — the mapping is declarative and automatic.
 
 1. In the last lab, you created two data roles. You will use the same naming conventions but map them to their Entra ID app role counterparts. When the user has the Entra ID app role, they will automatically have the role in the Oracle AI Database. 
 
@@ -248,10 +248,10 @@ Besides the custom end-user context, another key feature of this lab is the `MAP
       </copy>
       ```
 
-      | DATA\_ROLE | MAPPED\_TO | ENABLED\_BY\_DEFAULT |
+      | `DATA_ROLE` | `MAPPED_TO` | `ENABLED_BY_DEFAULT` |
       |---|---|---|
-      | HRAPP\_EMPLOYEES | azure\_role=EMPLOYEES | true |
-      | HRAPP\_MANAGERS | azure\_role=MANAGERS | true |
+      | `HRAPP_EMPLOYEES` | `azure_role=EMPLOYEES` | true |
+      | `HRAPP_MANAGERS` | `azure_role=MANAGERS` | true |
       {: title="Data roles and Entra ID mappings"}
 
    When Emma authenticates with a token containing the `EMPLOYEES` claim, Oracle Database automatically activates `HRAPP_EMPLOYEES`. When Marvin authenticates with tokens containing both `EMPLOYEES` and `MANAGERS` claims, both data roles activate. No code required.
@@ -300,12 +300,12 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-      | GRANT\_NAME | PRIVILEGE | GRANTEE | PREDICATE |
+      | `GRANT_NAME` | PRIVILEGE | GRANTEE | PREDICATE |
       |---|---|---|---|
-      | HRAPP\_EMPLOYEES\_ACCESS | SELECT | HRAPP\_EMPLOYEES | upper(user\_name) = upper(ORA\_END\_USER\_CONTEXT.username) |
-      | HRAPP\_EMPLOYEES\_ACCESS | UPDATE | HRAPP\_EMPLOYEES | upper(user\_name) = upper(ORA\_END\_USER\_CONTEXT.username) |
-      | HRAPP\_MANAGER\_ACCESS | SELECT | HRAPP\_MANAGERS | manager\_id = ORA\_END\_USER\_CONTEXT.HR.EMP\_CTX.ID |
-      | HRAPP\_MANAGER\_ACCESS | UPDATE | HRAPP\_MANAGERS | manager\_id = ORA\_END\_USER\_CONTEXT.HR.EMP\_CTX.ID |
+      | `HRAPP_EMPLOYEES_ACCESS` | SELECT | `HRAPP_EMPLOYEES` | `upper(user_name) = upper(ORA_END_USER_CONTEXT.username)` |
+      | `HRAPP_EMPLOYEES_ACCESS` | UPDATE | `HRAPP_EMPLOYEES` | `upper(user_name) = upper(ORA_END_USER_CONTEXT.username)` |
+      | `HRAPP_MANAGER_ACCESS` | SELECT | `HRAPP_MANAGERS` | `manager_id = ORA_END_USER_CONTEXT.HR.EMP_CTX.ID` |
+      | `HRAPP_MANAGER_ACCESS` | UPDATE | `HRAPP_MANAGERS` | `manager_id = ORA_END_USER_CONTEXT.HR.EMP_CTX.ID` |
       {: title="Data grants"}
 
 ## Task 6: Test as Emma and Marvin
@@ -351,9 +351,9 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-      | AUTHENTICATED\_IDENTITY | ENTERPRISE\_IDENTITY | AUTH\_METHOD | CURRENT\_USER |
+      | `AUTHENTICATED_IDENTITY` | `ENTERPRISE_IDENTITY` | `AUTH_METHOD` | `CURRENT_USER` |
       |---|---|---|---|
-      | emma@example.com | 00000000-0000-0000-0000-000000000000 | TOKEN\_GLOBAL | XS$NULL |
+      | emma@example.com | 00000000-0000-0000-0000-000000000000 | `TOKEN_GLOBAL` | XS$NULL |
       {: title="Emma's session identity"}
 
     `AUTHENTICATED_IDENTITY` shows the Entra ID email. `ENTERPRISE_IDENTITY` shows the Entra ID Object ID (a UUID), not the email — this is the object identifier assigned to the user in your Azure tenant.
@@ -382,7 +382,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-      | EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | USER\_NAME | SSN | SALARY | PHONE\_NUMBER |
+      | `EMPLOYEE_ID` | `FIRST_NAME` | `LAST_NAME` | `USER_NAME` | SSN | SALARY | `PHONE_NUMBER` |
       |---|---|---|---|---|---|---|
       | 3 | Emma | Baker | emma@example.com | 333-33-3333 | 120000 | 555-100-0003 |
       {: title="Emma's query result"}
@@ -496,7 +496,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-      | EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | USER\_NAME | SSN | SALARY | PHONE\_NUMBER |
+      | `EMPLOYEE_ID` | `FIRST_NAME` | `LAST_NAME` | `USER_NAME` | SSN | SALARY | `PHONE_NUMBER` |
       |---|---|---|---|---|---|---|
       | 2 | Marvin | Morgan | marvin@example.com | 222-22-2222 | 175000 | 555-100-0002 |
       | 3 | Emma | Baker | emma@example.com | | 120000 | 555-100-0003 |
@@ -592,7 +592,7 @@ For the Oracle Deep Data Security data grants, you will continue to use the same
       </copy>
       ```
 
-      | EMPLOYEE\_ID | FIRST\_NAME | LAST\_NAME | USER\_NAME | SSN | SALARY | PHONE\_NUMBER |
+      | `EMPLOYEE_ID` | `FIRST_NAME` | `LAST_NAME` | `USER_NAME` | SSN | SALARY | `PHONE_NUMBER` |
       |---|---|---|---|---|---|---|
       | 2 | Marvin | Morgan | marvin@example.com | 222-22-2222 | 175000 | 555-100-0002 |
       {: title="Marvin's result after role change"}
