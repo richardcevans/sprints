@@ -1,10 +1,12 @@
-# Using Data Grant Filters with Oracle Deep Data Security
+# Go Beyond the Data Grant with Deep Data Security Filters
 
 ## Introduction
 
 Welcome to this **Oracle Deep Data Security LiveLabs FastLab** workshop.
 
-Use data grant filters to narrow existing access to HR data inside Oracle Database. You will use the same end users, data roles, tables, and seven employee records as the Getting Started with Oracle Deep Data Security lab: Emma is an employee, and Marvin is her manager.
+> Use Deep Data Security filters to further narrow access already established by data grants, without changing the application query.
+
+You will use the same end users, data roles, tables, and seven employee records as the Getting Started with Oracle Deep Data Security lab: Emma is an employee, and Marvin is her manager.
 
 Estimated Time: 20 minutes
 
@@ -18,13 +20,13 @@ In this lab, you will:
 - Observe the default AND behavior when multiple filters apply.
 - Remove the filters and verify that the original access returns.
 
-## The Challenge
+## The Authorization Scenario
 
-An HR compensation review needs to focus on employees in selected salary bands. Marvin already has access to his own record and his direct reports. You want the database to restrict his view to the selected bands, even when his query contains no WHERE clause.
+In this authorization scenario, an HR compensation review needs to focus on employees in selected salary bands. Marvin already has access to his own record and his direct reports. You want the database to restrict his view to the selected bands, even when his query contains no WHERE clause.
 
 The salary bands in this lab are illustrative authorization rules. They make the effect of each filter easy to see using the existing sample data. This lab uses direct SQL connections; it does not create an AI agent or chat application.
 
-## How Data Grant Filters Work
+## How Filters Restrict Existing Access
 
 A **data grant** establishes access. A **data grant filter** restricts that existing access. A filter does not grant access by itself and cannot make an otherwise unauthorized employee record visible.
 
@@ -46,7 +48,7 @@ Ordinary data grants are additive by default: their allowed data is combined wit
 - SQL*Plus or SQLcl and a working database connection alias. Replace `hrdb` in the examples with your connection alias.
 - A disposable lab environment. The standalone setup creates an HR schema and uses sample passwords and fictitious employee data.
 
-### Choose Your Starting Point
+### Choose How to Start the Lab
 
 **Starting fresh:** Complete Tasks 1 through 8. The setup uses the original lab's schema, tables, rows, users, and roles.
 
@@ -54,7 +56,7 @@ Ordinary data grants are additive by default: their allowed data is combined wit
 
 Keep an administrator session open for policy changes. Use separate Emma and Marvin sessions for queries, and reconnect those end-user sessions after each policy change before checking results.
 
-## Task 1: Create the HR Schema and Employee Data
+## Task 1: Set Up the HR Sample Data
 
 **The Scenario:** You have an AI tool that will query an HR employees table containing sensitive data — Social Security Numbers, salaries, and employee contact information. You want any user to be able to issue a query, a question, and receive only the data they are supposed to see.
 
@@ -152,7 +154,7 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
 
       Your setup account can see all seven rows. Next, you will establish separate access for Emma and Marvin, then restrict that access with data grant filters.
 
-## Task 2: Create Emma and Marvin
+## Task 2: Create the End Users
 
 **The Simplest Case:** Before introducing data roles, you will create Emma and Marvin as end users — the new Oracle Database identity type that data grants are built around. This is the foundation of how Deep Data Security works: identity-first access, with no schema ownership required.
 
@@ -174,7 +176,7 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
       </copy>
       ```
 
-## Task 3: Create Database Roles and Data Roles
+## Task 3: Configure Roles and User Access
 
 > **Connection:** Run as your lab DBA account.
 
@@ -233,7 +235,7 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
 
       Emma and Marvin both have `HRAPP_EMPLOYEES`. Only Marvin has `HRAPP_MANAGERS`. The last row shows `DIRECT_LOGON_ROLE` — a standard database role — granted to the `HRAPP_EMPLOYEES` data role, which is what allows direct SQL*Plus connections for both users.
 
-## Task 4: Establish the Original Access with Aliases
+## Task 4: Establish Baseline Employee and Manager Access
 
 > **Connection:** Run as your lab DBA account.
 
@@ -318,7 +320,7 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
 
     Marvin's own record comes from the employee grant. His direct reports come from the manager grant. Unauthorized SSN values appear as NULL (normally blank in SQL*Plus). Grace, Bob, and Fiona are outside his granted access.
 
-## Task 5: Narrow Marvin's Access with a Data Grant Filter
+## Task 5: Restrict Marvin's Access by Salary
 
 > **Connection:** Create the filter as your lab DBA account.
 
@@ -367,7 +369,7 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
 
     Emma still sees her own record and salary of 120000. She does not have `HRAPP_MANAGERS`, so this filter does not apply to her.
 
-## Task 6: Apply Two Filters with Default AND Behavior
+## Task 6: See How Multiple Filters Combine
 
 > **Connection:** Make policy changes as your lab DBA account; query as Marvin.
 
@@ -413,7 +415,7 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
 
     **Expected result: no rows selected.** Grace (1) is outside Marvin's original grants; Emma (3) is excluded by the salary filters. An application-supplied WHERE clause does not replace the database authorization conditions.
 
-## Task 7: Remove the Filters and Restore the Original View
+## Task 7: Remove the Filters and Restore Baseline Access
 
 > **Connection:** Run the DROP statements as your lab DBA account.
 
@@ -440,7 +442,7 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
 
     **Expected result:** the four rows from Task 4—Marvin, Emma, Charlie, and Dana. Only Marvin's SSN is visible. Removing restrictions restores his underlying granted access; it does not grant access to all seven employees.
 
-## Task 8: Clean Up (Optional)
+## Task 8: Clean Up the Lab (Optional)
 
 Skip this task if you want to keep the users, tables, and SELECT grants for another exercise. If you continued from the original lab, its UPDATE privileges have been replaced; rerun that lab's grant definitions if you need to restore its update exercises.
 
@@ -470,7 +472,7 @@ Skip this task if you want to keep the users, tables, and SELECT grants for anot
     </copy>
     ```
 
-## What You Built
+## What You Learned
 
 You used the same seven employee records, two tables, and two end users throughout the lab. Only the authorization policies changed.
 
