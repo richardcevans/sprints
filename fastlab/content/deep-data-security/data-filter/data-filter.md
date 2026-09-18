@@ -15,7 +15,7 @@ In this lab, you will:
 - Establish Emma's access to her own record and Marvin's access to his own record and direct reports.
 - Use table aliases in data grants and data grant filters.
 - Apply salary filters to narrow Marvin's existing access.
-- Compare the default AND behavior with an explicit OR combining rule.
+- Observe the default AND behavior when multiple filters apply.
 - Remove the filters and verify that the original access returns.
 
 ## The Challenge
@@ -34,16 +34,15 @@ A **data grant** establishes access. A **data grant filter** restricts that exis
 | Data roles | `HRAPP_EMPLOYEES` carries employee access; `HRAPP_MANAGERS` carries manager access and the new filters. |
 | Data grants | Allow access to the user's own record and, for Marvin, his direct reports. |
 | Data grant filters | Narrow Marvin's authorized records by salary. |
-| Tags and combining rules | Group salary filters and combine them with OR instead of the default AND. |
 
-Ordinary data grants are additive by default: their allowed data is combined with OR. Applicable filters are restrictive and combine with AND by default. A combining rule can change how a tagged group of filters combines, but its result still restricts the underlying access.
+Ordinary data grants are additive by default: their allowed data is combined with OR. Applicable data grant filters are restrictive and combine with AND by default. A filter narrows the underlying access; it does not grant additional rows.
 
 **Aliases:** In `ON hr.employees e`, `e` is a temporary name for the table within that policy definition. `e.salary` refers to the table's salary column. An alias creates no new object and changes no permissions. Each SQL statement or policy has its own alias scope.
 
 ### Prerequisites
 
 - **Oracle AI Database 26ai with the October Release Update**.
-- A lab DBA account with the privileges required to create schemas, tables, end users, data roles, data grants, filters, and combining rules.
+- A lab DBA account with the privileges required to create schemas, tables, end users, data roles, data grants, and filters.
 - SQL*Plus or SQLcl and a working database connection alias. Replace `hrdb` in the examples with your connection alias.
 - A disposable lab environment. The standalone setup creates an HR schema and uses sample passwords and fictitious employee data.
 
@@ -328,15 +327,14 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
     ```sql
     <copy>
     CREATE OR REPLACE DATA GRANT FILTER hr.HRAPP_HIGH_SALARY_FILTER
-      WITH TAG salary_filters AS
-      SELECT
+      AS SELECT
       ON hr.employees e
       WHERE e.salary >= 125000
       TO HRAPP_MANAGERS;
     </copy>
     ```
 
-    The alias `e` names the table inside this filter. The tag `salary_filters` groups filters for a later combining rule; the tag does not grant access or change the default AND behavior.
+    The alias `e` names the table inside this filter. The alias does not grant access or change the default filter behavior.
 
     This filter restricts Marvin's applicable SELECT access on the table, including access from his employee grant. It is not limited to rows supplied by the manager grant merely because the filter is assigned to `HRAPP_MANAGERS`.
 
@@ -369,7 +367,7 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
 
     Emma still sees her own record and salary of 120000. She does not have `HRAPP_MANAGERS`, so this filter does not apply to her.
 
-## Task 6: Compare AND and OR for Two Filters
+## Task 6: Apply Two Filters with Default AND Behavior
 
 > **Connection:** Make policy changes as your lab DBA account; query as Marvin.
 
@@ -378,8 +376,7 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
     ```sql
     <copy>
     CREATE OR REPLACE DATA GRANT FILTER hr.HRAPP_LOW_SALARY_FILTER
-      WITH TAG salary_filters AS
-      SELECT
+      AS SELECT
       ON hr.employees e
       WHERE e.salary <= 100000
       TO HRAPP_MANAGERS;
@@ -402,39 +399,9 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
     salary >= 125000 AND salary <= 100000
     ```
 
-    No salary can satisfy both conditions. Giving the filters the same tag does not automatically combine them with OR.
+    No salary can satisfy both conditions.
 
-3. As your lab DBA, create a combining rule that accepts either salary band.
-
-    ```sql
-    <copy>
-    CREATE OR REPLACE DATA GRANT COMBINING RULE hr.HRAPP_SALARY_FILTER_RULE
-      ON hr.employees
-      COMBINE FILTERS AS ANY_OF(salary_filters);
-    </copy>
-    ```
-
-    `ANY_OF` combines the applicable filters bearing the tag with OR. `ALL_OF` would combine them with AND. Once included in this rule, these filters are evaluated through the rule rather than also being applied independently.
-
-4. Reconnect as Marvin and repeat the query.
-
-    ```sql
-    <copy>
-    SELECT employee_id, first_name, department_id, salary, ssn
-    FROM hr.employees
-    ORDER BY employee_id;
-    </copy>
-    ```
-
-    | `EMPLOYEE_ID` | `FIRST_NAME` | `DEPARTMENT_ID` | SALARY | SSN |
-    |---|---|---|---|---|
-    | 2 | Marvin | 1 | 175000 | 222-22-2222 |
-    | 4 | Charlie | 1 | 95000 | NULL |
-    | 5 | Dana | 1 | 130000 | NULL |
-
-    The effective row restriction is the original authorized rows AND `(salary >= 125000 OR salary <= 100000)`. Emma's 120000 salary is outside both bands. Marvin still cannot see his direct reports' SSNs.
-
-5. Try a query that explicitly requests an unauthorized employee or a record excluded by the filters.
+3. Try a query that explicitly requests an unauthorized employee or a record excluded by the filters.
 
     ```sql
     <copy>
@@ -450,17 +417,16 @@ Keep an administrator session open for policy changes. Use separate Emma and Mar
 
 > **Connection:** Run the DROP statements as your lab DBA account.
 
-1. Remove the combining rule and both filters. Keep the ordinary grants.
+1. Remove both filters. Keep the ordinary grants.
 
     ```sql
     <copy>
-    DROP DATA GRANT COMBINING RULE hr.HRAPP_SALARY_FILTER_RULE;
     DROP DATA GRANT FILTER hr.HRAPP_HIGH_SALARY_FILTER;
     DROP DATA GRANT FILTER hr.HRAPP_LOW_SALARY_FILTER;
     </copy>
     ```
 
-    Complete all three statements before querying again. Dropping only the combining rule returns the two remaining filters to their default AND behavior; it does not remove them.
+    Complete both statements before querying again.
 
 2. Reconnect as Marvin and repeat the query.
 
@@ -480,11 +446,10 @@ Skip this task if you want to keep the users, tables, and SELECT grants for anot
 
 > **Connection:** Disconnect Emma and Marvin. Run cleanup as your lab DBA account. Full cleanup deletes the shared lab HR schema and its data, including objects reused from the original lab. Run it only for the disposable schema created for these labs.
 
-1. Remove any remaining filters and combining rule, including when you stopped before Task 7.
+1. Remove any remaining filters, including when you stopped before Task 7.
 
     ```sql
     <copy>
-    DROP DATA GRANT COMBINING RULE IF EXISTS hr.HRAPP_SALARY_FILTER_RULE;
     DROP DATA GRANT FILTER IF EXISTS hr.HRAPP_HIGH_SALARY_FILTER;
     DROP DATA GRANT FILTER IF EXISTS hr.HRAPP_LOW_SALARY_FILTER;
     </copy>
@@ -514,10 +479,9 @@ You used the same seven employee records, two tables, and two end users througho
 | Original SELECT grants | Marvin, Emma, Charlie, Dana | Emma |
 | Salary >= 125000 filter | Marvin, Dana | Emma |
 | Both salary filters with default AND | No rows | Emma |
-| Both salary filters with `ANY_OF` | Marvin, Charlie, Dana | Emma |
-| Filters and combining rule removed | Marvin, Emma, Charlie, Dana | Emma |
+| Both filters removed | Marvin, Emma, Charlie, Dana | Emma |
 
-Data grants establish access. Data grant filters narrow that access. Combining rules let you express alternatives within the restrictions, while aliases make the policy SQL easier to read. Oracle Database enforces the resulting access when Emma or Marvin queries the table.
+Data grants establish access. Data grant filters narrow that access, and multiple applicable filters combine with AND by default. Aliases make the policy SQL easier to read. Oracle Database enforces the resulting access when Emma or Marvin queries the table.
 
 ## Next Steps
 
