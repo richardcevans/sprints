@@ -48,12 +48,6 @@ Ordinary data grants are additive by default: their allowed data is combined wit
 - SQL*Plus or SQLcl and a working database connection alias. Replace `hrdb` in the examples with your connection alias.
 - A disposable lab environment. The standalone setup creates an HR schema and uses sample passwords and fictitious employee data.
 
-### Choose How to Start the Lab
-
-**Starting fresh:** Complete Tasks 1 through 8. The setup uses the original lab's schema, tables, rows, users, and roles.
-
-**Continuing from the original lab:** Complete [Getting Started with Oracle Deep Data Security](../end-user-data-grants/index.html) first. If its objects remain, skip Tasks 1 through 3 and start at Task 4. Task 4 replaces the two original grants with SELECT-only grants for this lab. If earlier exercises changed any employee data, restore the original values shown in Task 1 before continuing; otherwise the expected results may differ. Do not run the CREATE statements against an unrelated existing HR schema.
-
 Keep an administrator session open for policy changes. Use separate Emma and Marvin sessions for queries, and reconnect those end-user sessions after each policy change before checking results.
 
 ## Task 1: Set Up the HR Sample Data
