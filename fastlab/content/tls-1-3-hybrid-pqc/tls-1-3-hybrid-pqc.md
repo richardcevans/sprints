@@ -39,7 +39,7 @@ In this lab, you will:
 This lab assumes you have:
 
 - An Oracle AI Database 26ai server and a DB26ai client with TLS 1.3 support.
-- An existing one-way TLS configuration with a working TCPS listener, server certificate, and trusted client certificate chain.
+- An existing one-way TLS configuration with a server certificate, trusted client certificate chain, and wallets available to the Oracle listener.
 - OS access to the database host and client configuration files as the appropriate Oracle software owner.
 - A working TCPS alias based on `PDB_NAME`, such as `${PDB_NAME}_tls`, plus database credentials for the lab PDB.
 
@@ -59,8 +59,8 @@ python $ORACLE_HOME/bin/set_crypto_provider.py status
 </copy>
 ```
 
-This FastLab changes protocol and key-exchange settings. It does not create wallets, certificates, or a TCPS listener.
-If TCPS is not configured, complete the [Oracle one-way TLS workshop](https://livelabs.oracle.com/ords/r/dbpm/livelabs/view-workshop?wid=3631).
+This FastLab changes protocol and key-exchange settings and adds or updates the TCPS listener endpoint. It does not create wallets or certificates.
+If the one-way TLS wallets and certificates are not configured, complete the [Oracle one-way TLS workshop](https://livelabs.oracle.com/ords/r/dbpm/livelabs/view-workshop?wid=3631).
 
 ## Task 1: Download and prepare the TLS scripts
 
@@ -106,7 +106,7 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
 
 ## Task 2: Configure TLS 1.2 and TLS 1.3 on the host
 
-Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. They back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and reload the existing listener. They reuse the existing TCPS listener port. They do not create wallets, certificates, or a TCPS listener.
+Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. They back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and add or update the TCPS listener endpoint. They use Oracle's recommended TCPS port `2484` when adding a new endpoint and reuse an existing TCPS listener port when one is already configured. They do not create wallets or certificates.
 
 1. Confirm the variables and Oracle Net locations.
 

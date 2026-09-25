@@ -43,6 +43,7 @@ if [[ ${TLS_CONFIGURE_TLS13:-YES} == YES ]]; then
 fi
 
 HAD_TCPS=0
+ADDED_LISTENER=0
 if grep -Eiq 'PROTOCOL[[:space:]]*=[[:space:]]*TCPS' "$LISTENER_FILE"; then
     HAD_TCPS=1
     EXISTING_TCPS_PORT=$(awk '
@@ -66,7 +67,30 @@ if grep -Eiq 'PROTOCOL[[:space:]]*=[[:space:]]*TCPS' "$LISTENER_FILE"; then
         tls_warn "A TCPS address exists in $LISTENER_FILE, but its port could not be detected; using TLS_TCPS_PORT=$TLS_TCPS_PORT."
     fi
 else
-    tls_die "No TCPS listener address was found in $LISTENER_FILE. Complete the Oracle one-way TLS workshop first; this FastLab does not create or start a TCPS listener."
+    if grep -Eiq "^[[:space:]]*${TLS_LISTENER_NAME}[[:space:]]*=" "$LISTENER_FILE"; then
+        if grep -Eiq 'PROTOCOL[[:space:]]*=[[:space:]]*TCP\)' "$LISTENER_FILE"; then
+            tls_edit_in_place "$LISTENER_FILE" -E "/PROTOCOL[[:space:]]*=[[:space:]]*TCP\\)/a\\      (ADDRESS = (PROTOCOL = TCPS)(HOST = $TLS_SERVER_HOST)(PORT = $TLS_TCPS_PORT))"
+            HAD_TCPS=1
+            printf 'Added TCPS listener address on port %s to %s.\n' "$TLS_TCPS_PORT" "$TLS_LISTENER_NAME"
+        else
+            tls_die "Listener $TLS_LISTENER_NAME exists, but no TCP address was found in $LISTENER_FILE. Review the listener configuration before running this lab."
+        fi
+    else
+        while IFS= read -r line; do
+            [[ -n $line ]] && tls_append_raw_line "$LISTENER_FILE" "$line"
+        done <<EOF
+$TLS_LISTENER_NAME =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = $TLS_SERVER_HOST)(PORT = $TLS_TCP_PORT))
+      (ADDRESS = (PROTOCOL = TCPS)(HOST = $TLS_SERVER_HOST)(PORT = $TLS_TCPS_PORT))
+    )
+  )
+EOF
+        HAD_TCPS=1
+        ADDED_LISTENER=1
+        printf 'Created %s with TCP %s and TCPS %s.\n' "$TLS_LISTENER_NAME" "$TLS_TCP_PORT" "$TLS_TCPS_PORT"
+    fi
 fi
 
 if grep -Eiq "^[[:space:]]*${TLS_TNS_ALIAS}[[:space:]]*=" "$TNSNAMES_FILE"; then
@@ -97,7 +121,9 @@ cat -- "$LISTENER_FILE"
 printf '%s\n' "Updated $TNSNAMES_FILE:"
 tail -30 -- "$TNSNAMES_FILE"
 
-if (( HAD_TCPS == 1 )); then
+if (( ADDED_LISTENER == 1 )); then
+    "$LSNRCTL" start "$TLS_LISTENER_NAME"
+elif (( HAD_TCPS == 1 )); then
     if ! "$LSNRCTL" reload "$TLS_LISTENER_NAME" >/dev/null 2>&1; then
         "$LSNRCTL" reload
     fi
