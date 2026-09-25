@@ -26,6 +26,7 @@ mkdir -p -- "$TNS_ADMIN" 2>/dev/null || tls_run_as_root mkdir -p -- "$TNS_ADMIN"
 for file in "$SQLNET_FILE" "$LISTENER_FILE" "$TNSNAMES_FILE"; do
     tls_touch_file "$file"
 done
+tls_remove_orphan_tns_entries "$TNSNAMES_FILE"
 
 tls_set_parameter "$SQLNET_FILE" SSL_CLIENT_AUTHENTICATION FALSE
 tls_set_parameter "$LISTENER_FILE" SSL_CLIENT_AUTHENTICATION FALSE

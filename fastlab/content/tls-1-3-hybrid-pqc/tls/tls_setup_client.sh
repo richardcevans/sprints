@@ -22,6 +22,7 @@ tls_backup_file "$CLIENT_TNSNAMES"
 mkdir -p -- "$CLIENT_TNS_ADMIN" 2>/dev/null || tls_run_as_root mkdir -p -- "$CLIENT_TNS_ADMIN"
 tls_touch_file "$CLIENT_SQLNET"
 tls_touch_file "$CLIENT_TNSNAMES"
+tls_remove_orphan_tns_entries "$CLIENT_TNSNAMES"
 
 tls_set_parameter "$CLIENT_SQLNET" SSL_CLIENT_AUTHENTICATION FALSE
 if [[ ${TLS_CONFIGURE_TLS13:-YES} == YES ]]; then

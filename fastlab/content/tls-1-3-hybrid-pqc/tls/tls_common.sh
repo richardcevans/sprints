@@ -232,6 +232,65 @@ tls_append_raw_line() {
     fi
 }
 
+tls_filter_orphan_tns_entries() {
+    local file=$1
+    awk '
+        function parentheses(line, opened, closed) {
+            opened = gsub(/\(/, "", line)
+            closed = gsub(/\)/, "", line)
+            return opened - closed
+        }
+        {
+            if (!skipping && $0 ~ /^[[:space:]]*=[[:space:]]*$/) {
+                skipping = 1
+                depth = 0
+                saw_descriptor = 0
+                next
+            }
+            if (skipping) {
+                line = $0
+                depth += parentheses(line)
+                if (line ~ /\(/) {
+                    saw_descriptor = 1
+                }
+                if (saw_descriptor && depth <= 0) {
+                    skipping = 0
+                }
+                next
+            }
+            print
+        }
+    ' "$file"
+}
+
+tls_remove_orphan_tns_entries() {
+    local file=$1 temp
+    [[ -f $file ]] || return 0
+
+    if tls_file_writable "$file" && [[ -w $(dirname -- "$file") ]]; then
+        temp=$(mktemp "${file}.tls-fastlab.XXXXXX")
+        tls_filter_orphan_tns_entries "$file" > "$temp"
+        chmod --reference="$file" -- "$temp"
+        if cmp -s -- "$file" "$temp"; then
+            rm -f -- "$temp"
+        else
+            mv -f -- "$temp" "$file"
+            printf 'Removed orphan TNS entry from %s\n' "$file"
+        fi
+    else
+        temp=$(tls_run_as_root mktemp "${file}.tls-fastlab.XXXXXX")
+        tls_filter_orphan_tns_entries "$file" | tls_run_as_root tee "$temp" >/dev/null
+        tls_run_as_root chmod --reference="$file" -- "$temp"
+        tls_run_as_root chown --reference="$file" -- "$temp"
+        if tls_run_as_root cmp -s -- "$file" "$temp"; then
+            tls_run_as_root rm -f -- "$temp"
+        else
+            tls_run_as_root mv -f -- "$temp" "$file"
+            printf 'Removed orphan TNS entry from %s\n' "$file"
+        fi
+    fi
+}
+
 tls_set_parameter() {
     local file=$1 key=$2 value=$3
     tls_edit_in_place "$file" -E "/^[[:space:]]*${key}[[:space:]]*=/d"
