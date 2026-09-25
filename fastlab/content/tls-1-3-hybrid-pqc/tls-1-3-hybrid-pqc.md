@@ -195,7 +195,15 @@ Connect through the `${PDB_NAME}_tls` alias and record the protocol, negotiated 
     </copy>
     ```
 
-    `NETWORK_PROTOCOL` should be `tcps`. Keep this session open while you update the configuration, or exit and reconnect after a listener reload.
+    `NETWORK_PROTOCOL` should be `tcps`.
+
+3. Exit SQL*Plus to return to the command line before continuing to the next task.
+
+    ```sql
+    <copy>
+    exit
+    </copy>
+    ```
 
 ## Task 4: Prefer hybrid key exchange
 
@@ -237,17 +245,15 @@ Connect through the `${PDB_NAME}_tls` alias and record the protocol, negotiated 
 
 Use connection-specific `TLS_VERSION` settings to prove that the endpoint accepts both versions.
 
-Copy the existing `${PDB_NAME}_tls` entry twice. Keep its host, port, service, wallet, and other settings unchanged.
+1. Create the version-specific aliases.
 
-1. Name the copied entries `${PDB_NAME}_tls13` and `${PDB_NAME}_tls12`. Add the following `SECURITY` section to each entry:
-
-    ```text
+    ```bash
     <copy>
-    (SECURITY=(TLS_VERSION=TLSv1.3))
+    ./tls_setup_test_aliases.sh
     </copy>
     ```
 
-    Use `TLSv1.2` in the `${PDB_NAME}_tls12` entry. In `tnsnames.ora`, do not wrap this value in parentheses; that form is for `sqlnet.ora` and `listener.ora`.
+    The script reads the TCPS host, port, and service from `${PDB_NAME}_tls`, then creates aliases with connection-specific TLS versions. It backs up `tnsnames.ora` before editing it. If both version aliases already exist, it leaves them unchanged; if only one exists, review the file before continuing.
 
 2. Connect through the TLS 1.3 alias and verify the session.
 
@@ -268,7 +274,15 @@ Copy the existing `${PDB_NAME}_tls` entry twice. Keep its host, port, service, w
 
     The result should show `tcps` and `TLSv1.3`. On 26ai, or on 19.32 after switching to the next-generation provider, Task 4 makes `hybrid` the preferred TLS 1.3 key-exchange group when both endpoints support it.
 
-3. Exit SQL*Plus, connect through the TLS 1.2 alias, and run the same query.
+3. Exit SQL*Plus to return to the command line.
+
+    ```sql
+    <copy>
+    exit
+    </copy>
+    ```
+
+4. Connect through the TLS 1.2 alias, and run the same query.
 
     ```bash
     <copy>
