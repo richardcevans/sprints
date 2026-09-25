@@ -108,7 +108,7 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
 
 Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. They back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and add or update the TCPS listener endpoint. They use Oracle's recommended TCPS port `2484` when adding a new endpoint and reuse an existing TCPS listener port when one is already configured. They do not create wallets or certificates.
 
-By default, the listener wallet path is `${WALLET_ROOT}`. Set `TLS_LISTENER_WALLET_DIR` when the existing listener wallet is elsewhere.
+By default, the host setup restarts the listener so new TCPS endpoints and wallet settings take effect. The listener wallet path is `${WALLET_ROOT}`; set `TLS_LISTENER_WALLET_DIR` when the existing listener wallet is elsewhere.
 
 1. Confirm the variables and Oracle Net locations.
 

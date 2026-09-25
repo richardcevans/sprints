@@ -54,7 +54,10 @@ if [[ $RESTORE_CLIENT == YES ]]; then
 fi
 
 if [[ $RESTORE_HOST == YES ]]; then
-    if ! "$LSNRCTL" reload "$TLS_LISTENER_NAME" >/dev/null 2>&1; then
+    if [[ ${TLS_RESTART_LISTENER:-YES} == YES ]]; then
+        "$LSNRCTL" stop "$TLS_LISTENER_NAME" >/dev/null 2>&1 || true
+        "$LSNRCTL" start "$TLS_LISTENER_NAME"
+    elif ! "$LSNRCTL" reload "$TLS_LISTENER_NAME" >/dev/null 2>&1; then
         "$LSNRCTL" reload
     fi
     "$SQLPLUS" -s / as sysdba <<SQL

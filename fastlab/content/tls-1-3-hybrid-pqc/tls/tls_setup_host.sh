@@ -128,7 +128,10 @@ cat -- "$LISTENER_FILE"
 printf '%s\n' "Updated $TNSNAMES_FILE:"
 tail -30 -- "$TNSNAMES_FILE"
 
-if (( ADDED_LISTENER == 1 )); then
+if [[ ${TLS_RESTART_LISTENER:-YES} == YES ]]; then
+    "$LSNRCTL" stop "$TLS_LISTENER_NAME" >/dev/null 2>&1 || true
+    "$LSNRCTL" start "$TLS_LISTENER_NAME"
+elif (( ADDED_LISTENER == 1 )); then
     "$LSNRCTL" start "$TLS_LISTENER_NAME"
 elif (( HAD_TCPS == 1 )); then
     if ! "$LSNRCTL" reload "$TLS_LISTENER_NAME" >/dev/null 2>&1; then
