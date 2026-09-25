@@ -243,7 +243,7 @@ Connect through the `${PDB_NAME}_tls` alias and record the protocol, negotiated 
 
 ## Task 5: Test TLS 1.3 and TLS 1.2
 
-Use connection-specific `TLS_VERSION` settings to prove that the endpoint accepts both versions.
+Use the provided script to create connection-specific aliases and prove that the endpoint accepts both versions. Do not copy or edit TNS entries by hand.
 
 1. Create the version-specific aliases.
 
@@ -253,7 +253,7 @@ Use connection-specific `TLS_VERSION` settings to prove that the endpoint accept
     </copy>
     ```
 
-    The script reads the TCPS host, port, and service from `${PDB_NAME}_tls`, then creates aliases with connection-specific TLS versions. It backs up `tnsnames.ora` before editing it. If both version aliases already exist, it leaves them unchanged; if only one exists, review the file before continuing.
+    The script reads the TCPS host, port, and service from `${PDB_NAME}_tls`, then creates `${PDB_NAME}_tls13` and `${PDB_NAME}_tls12` with connection-specific TLS versions. It backs up `tnsnames.ora` before editing it. If both version aliases already exist, it leaves them unchanged; if only one exists, review the file before continuing.
 
 2. Connect through the TLS 1.3 alias and verify the session.
 
