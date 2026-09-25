@@ -24,6 +24,22 @@ This lab assumes you have:
 - OS access to the database host and client configuration files as the appropriate Oracle software owner.
 - A working TCPS alias such as `pdb1_tls`, plus database credentials for the lab PDB.
 
+**Running this lab on Oracle Database 19.32 instead of 26ai:** TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before Task 2, switch providers and restart:
+
+    ```bash
+    <copy>
+    python $ORACLE_HOME/bin/set_crypto_provider.py next-generation
+    </copy>
+    ```
+
+    Restart the database instance and reload the listener after the switch. Confirm the provider is active before proceeding to Task 2:
+
+    ```bash
+    <copy>
+    python $ORACLE_HOME/bin/set_crypto_provider.py status
+    </copy>
+    ```
+
 This FastLab changes protocol and key-exchange settings. It does not create wallets, certificates, or a TCPS listener.
 If TCPS is not configured, complete the [Oracle one-way TLS workshop](https://livelabs.oracle.com/ords/r/dbpm/livelabs/view-workshop?wid=3631).
 
