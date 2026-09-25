@@ -106,7 +106,7 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
 
 ## Task 2: Configure TLS 1.2 and TLS 1.3 on the host
 
-Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. They back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and reload or start the listener. They do not create wallets or certificates.
+Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. They back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and reload or start the listener. They use Oracle's recommended TCPS port `2484` when creating a new endpoint and reuse an existing TCPS listener port when one is already configured. They do not create wallets or certificates.
 
 1. Confirm the variables and Oracle Net locations.
 

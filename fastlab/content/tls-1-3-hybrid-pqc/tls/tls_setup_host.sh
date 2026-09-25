@@ -45,6 +45,26 @@ HAD_TCPS=0
 ADDED_LISTENER=0
 if grep -Eiq 'PROTOCOL[[:space:]]*=[[:space:]]*TCPS' "$LISTENER_FILE"; then
     HAD_TCPS=1
+    EXISTING_TCPS_PORT=$(awk '
+        {
+            lowered = tolower($0)
+            if (lowered ~ /protocol[[:space:]]*=[[:space:]]*tcps/) {
+                in_tcps_address = 1
+            }
+            if (in_tcps_address && match(lowered, /port[[:space:]]*=[[:space:]]*[0-9]+/)) {
+                port = substr(lowered, RSTART, RLENGTH)
+                sub(/.*=[[:space:]]*/, "", port)
+                print port
+                exit
+            }
+        }
+    ' "$LISTENER_FILE")
+    if [[ -n $EXISTING_TCPS_PORT ]]; then
+        TLS_TCPS_PORT=$EXISTING_TCPS_PORT
+        printf 'Using existing TCPS listener port: %s\n' "$TLS_TCPS_PORT"
+    else
+        tls_warn "A TCPS address exists in $LISTENER_FILE, but its port could not be detected; using TLS_TCPS_PORT=$TLS_TCPS_PORT."
+    fi
 elif ! grep -Eiq "^[[:space:]]*${TLS_LISTENER_NAME}[[:space:]]*=" "$LISTENER_FILE"; then
     while IFS= read -r line; do
         [[ -n $line ]] && tls_append_raw_line "$LISTENER_FILE" "$line"
@@ -94,7 +114,9 @@ tail -30 -- "$TNSNAMES_FILE"
 if (( ADDED_LISTENER == 1 )); then
     "$LSNRCTL" start "$TLS_LISTENER_NAME"
 elif (( HAD_TCPS == 1 )); then
-    "$LSNRCTL" reload "$TLS_LISTENER_NAME" 2>/dev/null || "$LSNRCTL" reload
+    if ! "$LSNRCTL" reload "$TLS_LISTENER_NAME" >/dev/null 2>&1; then
+        "$LSNRCTL" reload
+    fi
 fi
 
 "$SQLPLUS" -s / as sysdba <<SQL

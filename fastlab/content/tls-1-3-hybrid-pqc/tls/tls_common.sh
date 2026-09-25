@@ -142,7 +142,7 @@ tls_load_defaults() {
     export TLS_CLIENT_TNS_ADMIN="$DAN_TNS_DIR"
     export TLS_SERVER_HOST="${TLS_SERVER_HOST:-${TLS_HOST:-$(hostname -f 2>/dev/null || hostname)}}"
     export TLS_TCP_PORT="${TLS_TCP_PORT:-1521}"
-    export TLS_TCPS_PORT="${TLS_TCPS_PORT:-1522}"
+    export TLS_TCPS_PORT="${TLS_TCPS_PORT:-2484}"
     export PDB_NAME="${PDB_NAME:-pdb1}"
     export TLS_TNS_ALIAS="${TLS_TNS_ALIAS:-${PDB_NAME}_tls}"
     export TLS_SERVICE_NAME="${TLS_SERVICE_NAME:-$PDB_NAME}"
