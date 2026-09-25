@@ -20,6 +20,7 @@ In this lab, you will:
 This lab assumes you have:
 
 - An Oracle AI Database 26ai server and a DB26ai client with TLS 1.3 support.
+- A client baseline that supports TLS 1.3 and `TLS_KEY_EXCHANGE_GROUPS`: use Instant Client/SQL*Plus 19.32 or later with the next-generation provider, or a 23ai or later client. Use a matching JDBC or ODP.NET driver release. Older 19c and 21c clients may be limited to TLS 1.2.
 - An existing one-way TLS configuration with a working TCPS listener, server certificate, and trusted client certificate chain.
 - OS access to the database host and client configuration files as the appropriate Oracle software owner.
 - A working TCPS alias such as `pdb1_tls`, plus database credentials for the lab PDB.
@@ -39,6 +40,10 @@ This lab assumes you have:
     python $ORACLE_HOME/bin/set_crypto_provider.py status
     </copy>
     ```
+
+    **Operational scope:** This provider switch applies to the Oracle home and all connections that use it; it is not scoped to this PDB, listener, or TCPS alias. On 19.32, it removes TLS 1.0 and TLS 1.1 support and requires a disruptive instance restart. Reverting requires switching back to the legacy provider and restarting again. Use this change only on a disposable lab system or during an approved maintenance window.
+
+    **FIPS note:** On 19.32, PQC and hybrid key exchange require the next-generation provider and are available in non-FIPS mode or FIPS 140-3 mode. They are not available with the legacy FIPS 140-2 provider. Confirm the target system FIPS mode before starting the lab.
 
 This FastLab changes protocol and key-exchange settings. It does not create wallets, certificates, or a TCPS listener.
 If TCPS is not configured, complete the [Oracle one-way TLS workshop](https://livelabs.oracle.com/ords/r/dbpm/livelabs/view-workshop?wid=3631).
@@ -100,7 +105,15 @@ Oracle AI Database 26ai supports TLS 1.2 and TLS 1.3. Set the same compatible pr
     </copy>
     ```
 
-3. Add the same `TLS_VERSION` entry to the listener `listener.ora` and to the client `sqlnet.ora` used by `pdb1_tls`. On a single-host lab, these files may be under the same network administration directory. On a separate client, edit the client file selected by `TNS_ADMIN`.
+3. Add the same `TLS_VERSION` entry to the listener `listener.ora` and to the client `sqlnet.ora` used by `pdb1_tls`. On a single-host lab, these files may be under the same network administration directory. On a separate client, back up the client file selected by `TNS_ADMIN` before editing it:
+
+    ```bash
+    <copy>
+    cp -p "$TNS_ADMIN/sqlnet.ora" "$TNS_ADMIN/sqlnet.ora.before-tls-hybrid-fastlab"
+    </copy>
+    ```
+
+    If `$TNS_ADMIN` and `$NET_ADMIN` point to the same directory, the server backup above already covers this file.
 
 4. Reload the listener after saving `listener.ora`.
 
@@ -197,7 +210,7 @@ For this lab, hybrid is the expected TLS 1.3 result. Both endpoints support DB26
 The SQL context does not expose the negotiated group; the cipher output is not proof of hybrid key exchange.
 
 
-If TLS 1.3 fails, confirm hybrid support on both DB26ai endpoints. Reload the listener and check that the client uses the intended `TNS_ADMIN` files. If needed, restore the Task 2 backups and reload the listener.
+If TLS 1.3 fails, confirm hybrid support on both DB26ai endpoints. Reload the listener and check that the client uses the intended `TNS_ADMIN` files. If needed, restore the Task 2 backups—including the separate client backup when applicable—and reload the listener.
 
 You may now proceed to the next lab.
 
@@ -213,6 +226,7 @@ Ready to dive deeper? These workshops move from TLS setup to a complete encrypte
 - [Oracle AI Database 26ai Security Guide: Transport Layer Security](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/configuring-transport-layer-security-encryption.html)
 - [Oracle AI Database 26ai Net Services Reference: `sqlnet.ora` Parameters](https://docs.oracle.com/en/database/oracle/oracle-database/26/netrf/parameters-for-the-sqlnet.ora.html)
 - [Oracle Database 19c Now Supports TLS 1.3, Post-Quantum Cryptography, and FIPS 140-3 Mode](https://blogs.oracle.com/database/database-19c-now-supports-tls-1-3-post-quantum-cryptography)
+- [Oracle Database 19c Post-Quantum Cryptography Reference](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/post-quantum-cryptography-reference.html)
 - [Both is better - Oracle AI Database 26ai adds hybrid-mode quantum-resistant support](https://blogs.oracle.com/database/hybrid-pqc)
 - [Announcing support for TLS 1.3 in Oracle Database 23ai](https://blogs.oracle.com/database/announcing-tls13)
 - [Oracle AI Database walletless TLS](https://www.braddiggs.com/2026/08/oracle-ai-database-walletless-tls.html) (community article)
