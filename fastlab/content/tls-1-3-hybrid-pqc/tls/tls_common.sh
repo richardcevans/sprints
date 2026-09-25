@@ -312,6 +312,18 @@ tls_backup_file() {
     printf 'Backup: %s\n' "$backup"
 }
 
+tls_restore_file_from_backup() {
+    local file=$1 backup=$2
+    [[ -f $backup ]] || return 1
+    tls_backup_file "$file"
+    if tls_file_writable "$file" && [[ -w $(dirname -- "$file") ]]; then
+        cp -p -- "$backup" "$file"
+    else
+        tls_run_as_root cp -p -- "$backup" "$file"
+    fi
+    printf 'Restored: %s from %s\n' "$file" "$backup"
+}
+
 tls_filter_orapki() {
     grep -i -v -E '^Oracle PKI|^Version|^Copyright' || true
 }

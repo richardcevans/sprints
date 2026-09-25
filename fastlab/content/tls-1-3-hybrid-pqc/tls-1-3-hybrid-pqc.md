@@ -266,6 +266,18 @@ The SQL context does not expose the negotiated group; the cipher output is not p
 
 If TLS 1.3 fails, confirm hybrid support on both DB26ai endpoints. Reload the listener and check that the client uses the intended `TNS_ADMIN` files. If needed, restore the Task 2 backups and reload the listener.
 
+### Optional rollback
+
+Use `tls_restore.sh` to restore the original Oracle Net files saved before the lab. The script backs up the current files first, requires explicit confirmation, reloads the listener, and re-registers database services. It does not change wallets or certificates.
+
+```bash
+<copy>
+./tls_restore.sh --yes-i-understand
+</copy>
+```
+
+The default `original` selector restores the `.before-tls-fastlab` backups. To restore a timestamped backup instead, set `TLS_RESTORE_BACKUP` to the timestamp suffix.
+
 You may now proceed to the next lab.
 
 
