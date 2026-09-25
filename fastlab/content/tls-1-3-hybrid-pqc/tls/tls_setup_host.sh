@@ -17,6 +17,12 @@ if [[ ${TLS_CONFIGURE_TLS13:-YES} == YES && ${TLS_CRYPTO_PROVIDER:-} == legacy ]
 fi
 
 # Back up every existing Oracle Net file before creating a directory or touching
+if [[ ! -d $TLS_LISTENER_WALLET_DIR ]]; then
+    tls_die "Listener wallet directory does not exist: $TLS_LISTENER_WALLET_DIR. Set TLS_LISTENER_WALLET_DIR to the existing listener wallet."
+fi
+if [[ ! -f $TLS_LISTENER_WALLET_DIR/cwallet.sso && ! -f $TLS_LISTENER_WALLET_DIR/ewallet.p12 ]]; then
+    tls_die "No listener wallet was found in $TLS_LISTENER_WALLET_DIR. This FastLab does not create wallets."
+fi
 # any of the files under ORACLE_HOME/ORACLE_BASE.
 for file in "$SQLNET_FILE" "$LISTENER_FILE" "$TNSNAMES_FILE"; do
     tls_backup_file "$file"
@@ -26,6 +32,7 @@ mkdir -p -- "$TNS_ADMIN" 2>/dev/null || tls_run_as_root mkdir -p -- "$TNS_ADMIN"
 for file in "$SQLNET_FILE" "$LISTENER_FILE" "$TNSNAMES_FILE"; do
     tls_touch_file "$file"
 done
+tls_set_parameter "$LISTENER_FILE" WALLET_LOCATION "(SOURCE = (METHOD = FILE) (METHOD_DATA = (DIRECTORY = $TLS_LISTENER_WALLET_DIR)))"
 tls_remove_orphan_tns_entries "$TNSNAMES_FILE"
 
 tls_set_parameter "$SQLNET_FILE" SSL_CLIENT_AUTHENTICATION FALSE

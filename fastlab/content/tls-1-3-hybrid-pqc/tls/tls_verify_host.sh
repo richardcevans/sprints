@@ -21,7 +21,7 @@ print_parameters() {
     fi
 
     awk '
-        /^[[:space:]]*(SSL_CLIENT_AUTHENTICATION|TLS_VERSION|TLS_KEY_EXCHANGE_GROUPS)[[:space:]]*=/ {
+        /^[[:space:]]*(SSL_CLIENT_AUTHENTICATION|TLS_VERSION|TLS_KEY_EXCHANGE_GROUPS|WALLET_LOCATION)[[:space:]]*=/ {
             line = $0
             sub(/^[[:space:]]*/, "", line)
             printf "  %s\n", line
