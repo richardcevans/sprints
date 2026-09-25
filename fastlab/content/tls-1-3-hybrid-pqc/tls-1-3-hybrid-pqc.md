@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Configure TLS 1.2 and TLS 1.3 on Oracle AI Database 26ai. Prefer hybrid key exchange for TLS 1.3. Verify both versions over TCPS and separate key establishment from the record cipher.
+Configure TLS 1.2 and TLS 1.3 on Oracle AI Database 19.32 or Oracle AI Database 26ai. Prefer hybrid key exchange for TLS 1.3 when the selected release, provider, and both endpoints support it. Verify both versions over TCPS and separate key establishment from the record cipher.
 
 Estimated Time: 15 minutes
 
@@ -38,12 +38,12 @@ In this lab, you will:
 
 This lab assumes you have:
 
-- An Oracle AI Database 26ai server and a DB26ai client with TLS 1.3 support.
+- An Oracle AI Database 19.32 or Oracle AI Database 26ai server and a matching client with TLS 1.3 support.
 - An existing one-way TLS configuration with a server certificate, trusted client certificate chain, and wallets available to the Oracle listener.
 - OS access to the database host and client configuration files as the appropriate Oracle software owner.
 - A working TCPS alias based on `PDB_NAME`, such as `${PDB_NAME}_tls`, plus database credentials for the lab PDB.
 
-**Running this lab on Oracle Database 19.32 instead of 26ai:** TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before Task 2, switch providers and restart. See the [Oracle Database 19c documentation on switching cryptographic providers](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/switching-crypto-providers.html):
+**Version-specific provider note:** On Oracle Database 19.32, TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before Task 2, switch providers and restart. See the [Oracle Database 19c documentation on switching cryptographic providers](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/switching-crypto-providers.html):
 
 ```bash
 <copy>
@@ -110,6 +110,8 @@ Run these scripts from the extracted `livelabs/tls` directory on the database ho
 
 By default, the host setup restarts the listener so new TCPS endpoints and wallet settings take effect. The listener wallet path is `${WALLET_ROOT}`; set `TLS_LISTENER_WALLET_DIR` when the existing listener wallet is elsewhere.
 
+The client setup writes `WALLET_LOCATION` to `sqlnet.ora` so the client can validate the server certificate. On the database host it defaults to the existing listener wallet. On a separate client host, set `TLS_CLIENT_WALLET_DIR` to that host's existing client trust wallet before running `tls_setup_client.sh`.
+
 1. Confirm the variables and Oracle Net locations.
 
     ```bash
@@ -134,6 +136,7 @@ By default, the host setup restarts the listener so new TCPS endpoints and walle
 
     ```bash
     <copy>
+    export TLS_CLIENT_WALLET_DIR="${TLS_CLIENT_WALLET_DIR:-$WALLET_ROOT}"
     ./tls_setup_client.sh
     </copy>
     ```
@@ -240,7 +243,7 @@ Copy the existing `${PDB_NAME}_tls` entry twice. Keep its host, port, service, w
     </copy>
     ```
 
-    The result should show `tcps` and `TLSv1.3`. Both configured endpoints support hybrid, so Task 4 makes it the preferred TLS 1.3 key exchange.
+    The result should show `tcps` and `TLSv1.3`. On 26ai, or on 19.32 after switching to the next-generation provider, Task 4 makes `hybrid` the preferred TLS 1.3 key-exchange group when both endpoints support it.
 
 3. Exit SQL*Plus, connect through the TLS 1.2 alias, and run the same query.
 
@@ -262,11 +265,11 @@ Copy the existing `${PDB_NAME}_tls` entry twice. Keep its host, port, service, w
     - `TLS_VERSION` confirms which protocol version the endpoints negotiated.
     - `TLS_CIPHERSUITE` identifies the record-layer authentication, encryption, and integrity algorithms. It does not identify the key-exchange group.
 
-For this lab, hybrid is the expected TLS 1.3 result. Both endpoints support DB26ai hybrid PQC, and `hybrid` is listed first.
+For either supported release, `hybrid` is the configured TLS 1.3 preference when the selected provider and both endpoints support it. On 19.32, this requires the next-generation provider.
 The SQL context does not expose the negotiated group; the cipher output is not proof of hybrid key exchange.
 
 
-If TLS 1.3 fails, confirm hybrid support on both DB26ai endpoints. Reload the listener and check that the client uses the intended `TNS_ADMIN` files. If needed, restore the Task 2 backups and reload the listener.
+If TLS 1.3 fails, confirm the selected release and provider, then confirm hybrid support on both endpoints. On 19.32, confirm that the next-generation provider is active. Reload the listener and check that the client uses the intended `TNS_ADMIN` files. If needed, restore the Task 2 backups and reload the listener.
 
 ### Optional rollback
 
@@ -293,6 +296,8 @@ Ready to dive deeper? These workshops move from TLS setup to a complete encrypte
 
 - [Oracle AI Database 26ai Security Guide: Transport Layer Security](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/configuring-transport-layer-security-encryption.html)
 - [Oracle AI Database 26ai Net Services Reference: `sqlnet.ora` Parameters](https://docs.oracle.com/en/database/oracle/oracle-database/26/netrf/parameters-for-the-sqlnet.ora.html)
+- [Oracle Database 19c Security Guide: Transport Layer Security](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/configuring-transport-layer-security-encryption.html)
+- [Oracle Database 19c Net Services Reference: `sqlnet.ora` Parameters](https://docs.oracle.com/en/database/oracle/oracle-database/19/netrf/parameters-for-the-sqlnet.ora.html)
 - [Oracle Database 19c Now Supports TLS 1.3, Post-Quantum Cryptography, and FIPS 140-3 Mode](https://blogs.oracle.com/database/database-19c-now-supports-tls-1-3-post-quantum-cryptography)
 - [Both is better - Oracle AI Database 26ai adds hybrid-mode quantum-resistant support](https://blogs.oracle.com/database/hybrid-pqc)
 - [Announcing support for TLS 1.3 in Oracle Database 23ai](https://blogs.oracle.com/database/announcing-tls13)

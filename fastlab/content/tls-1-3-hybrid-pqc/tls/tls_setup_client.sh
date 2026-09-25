@@ -14,6 +14,13 @@ if [[ ${TLS_CONFIGURE_TLS13:-YES} == YES && ${TLS_CRYPTO_PROVIDER:-} == legacy ]
     tls_die 'TLS 1.3 and hybrid key exchange require the next-generation cryptographic provider on Oracle Database 19.32.'
 fi
 
+if [[ ! -d $TLS_CLIENT_WALLET_DIR ]]; then
+    tls_die "Client wallet directory does not exist: $TLS_CLIENT_WALLET_DIR. Set TLS_CLIENT_WALLET_DIR to the existing client trust wallet."
+fi
+if [[ ! -f $TLS_CLIENT_WALLET_DIR/cwallet.sso && ! -f $TLS_CLIENT_WALLET_DIR/ewallet.p12 ]]; then
+    tls_die "No client wallet was found in $TLS_CLIENT_WALLET_DIR. This FastLab does not create wallets."
+fi
+
 # Back up both client files before creating a directory or touching anything in
 # the client configuration location. TNS_ADMIN can point to this directory.
 tls_backup_file "$CLIENT_SQLNET"
@@ -24,6 +31,7 @@ tls_touch_file "$CLIENT_SQLNET"
 tls_touch_file "$CLIENT_TNSNAMES"
 tls_remove_orphan_tns_entries "$CLIENT_TNSNAMES"
 
+tls_set_parameter "$CLIENT_SQLNET" WALLET_LOCATION "(SOURCE = (METHOD = FILE) (METHOD_DATA = (DIRECTORY = $TLS_CLIENT_WALLET_DIR)))"
 tls_set_parameter "$CLIENT_SQLNET" SSL_CLIENT_AUTHENTICATION FALSE
 if [[ ${TLS_CONFIGURE_TLS13:-YES} == YES ]]; then
     tls_set_parameter "$CLIENT_SQLNET" TLS_VERSION "(${TLS_VERSION_LIST})"

@@ -130,6 +130,7 @@ tls_load_defaults() {
     export WALLET_ROOT="${WALLET_ROOT:-$ORACLE_BASE/admin/$ORACLE_SID/wallet}"
     export ROOT_TLS_DIR="${ROOT_TLS_DIR:-$TLS_WORK_DIR/rootCA}"
     export TLS_LISTENER_WALLET_DIR="${TLS_LISTENER_WALLET_DIR:-$WALLET_ROOT}"
+    export TLS_CLIENT_WALLET_DIR="${TLS_CLIENT_WALLET_DIR:-$TLS_LISTENER_WALLET_DIR}"
     export DB_TLS_DIR="${DB_TLS_DIR:-$TLS_WORK_DIR/db_wallet}"
     export TLS_DIR="${TLS_DIR:-$WALLET_ROOT/tls}"
     export ORA_TLS_DIR="${ORA_TLS_DIR:-$TNS_ADMIN/wallet}"
