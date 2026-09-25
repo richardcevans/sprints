@@ -83,7 +83,7 @@ $alias_name =
       (SERVER = DEDICATED)
       (SERVICE_NAME = $TLS_SERVICE_NAME)
     )
-    (SECURITY = (TLS_VERSION = $tns_version))
+    (SECURITY = (TLS_VERSION = $tns_version)(WALLET_LOCATION = SYSTEM)(TLS_SERVER_DN_MATCH = TRUE))
   )
 EOF
     printf 'Created %s with TLS %s using %s:%s/%s\n' "$alias_name" "$version" "$TLS_SERVER_HOST" "$TLS_TCPS_PORT" "$TLS_SERVICE_NAME"
