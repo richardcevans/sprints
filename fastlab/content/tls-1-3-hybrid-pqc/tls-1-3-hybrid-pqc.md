@@ -148,11 +148,11 @@ Run these scripts from the extracted `livelabs/tls` directory on the database ho
 
 Connect through the `${PDB_NAME}_tls` alias and record the protocol, negotiated TLS version, and record-layer cipher suite.
 
-1. Connect with the generated TCPS alias. Replace `db_user` with a database user from your lab environment and enter its password when prompted.
+1. Connect with the generated TCPS alias as the `system` user and enter its password when prompted.
 
     ```bash
     <copy>
-    sqlplus "db_user@${PDB_NAME}_tls"
+    sqlplus "system@${PDB_NAME}_tls"
     </copy>
     ```
 
@@ -225,7 +225,7 @@ Copy the existing `${PDB_NAME}_tls` entry twice. Keep its host, port, service, w
 
     ```bash
     <copy>
-    sqlplus "db_user@${PDB_NAME}_tls13"
+    sqlplus "system@${PDB_NAME}_tls13"
     </copy>
     ```
 
@@ -244,7 +244,7 @@ Copy the existing `${PDB_NAME}_tls` entry twice. Keep its host, port, service, w
 
     ```bash
     <copy>
-    sqlplus "db_user@${PDB_NAME}_tls12"
+    sqlplus "system@${PDB_NAME}_tls12"
     </copy>
     ```
 
