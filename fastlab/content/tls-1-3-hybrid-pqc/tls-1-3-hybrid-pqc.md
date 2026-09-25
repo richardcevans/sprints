@@ -10,20 +10,20 @@ Before you begin, set `PDB_NAME` in the shell used for this lab. The scripts use
 
 For a persistent setting, add it to `.bashrc` and reload the shell:
 
-    ```bash
-    <copy>
-    echo 'export PDB_NAME=pdb1' >> ~/.bashrc
-    source ~/.bashrc
-    </copy>
-    ```
+```bash
+<copy>
+echo 'export PDB_NAME=pdb1' >> ~/.bashrc
+source ~/.bashrc
+</copy>
+```
 
 For the current shell only, run:
 
-    ```bash
-    <copy>
-    export PDB_NAME=pdb1
-    </copy>
-    ```
+```bash
+<copy>
+export PDB_NAME=pdb1
+</copy>
+```
 
 ### Objectives
 
@@ -45,19 +45,19 @@ This lab assumes you have:
 
 **Running this lab on Oracle Database 19.32 instead of 26ai:** TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before Task 2, switch providers and restart:
 
-    ```bash
-    <copy>
-    python $ORACLE_HOME/bin/set_crypto_provider.py next-generation
-    </copy>
-    ```
+```bash
+<copy>
+python $ORACLE_HOME/bin/set_crypto_provider.py next-generation
+</copy>
+```
 
-    Restart the database instance and reload the listener after the switch. Confirm the provider is active before proceeding to Task 2:
+Restart the database instance and reload the listener after the switch. Confirm the provider is active before proceeding to Task 2:
 
-    ```bash
-    <copy>
-    python $ORACLE_HOME/bin/set_crypto_provider.py status
-    </copy>
-    ```
+```bash
+<copy>
+python $ORACLE_HOME/bin/set_crypto_provider.py status
+</copy>
+```
 
 This FastLab changes protocol and key-exchange settings. It does not create wallets, certificates, or a TCPS listener.
 If TCPS is not configured, complete the [Oracle one-way TLS workshop](https://livelabs.oracle.com/ords/r/dbpm/livelabs/view-workshop?wid=3631).
@@ -70,7 +70,7 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
 
     ```bash
     <copy>
-    mkdir -p livelabs
+    mkdir -pv livelabs
     cd livelabs
     </copy>
     ```
@@ -81,7 +81,7 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
 
     ```bash
     <copy>
-    wget -O tls.zip https://objectstorage.us-ashburn-1.oraclecloud.com/p/BHNwcP7_8g6cj9ap6j8r3rjBky44eNnrTsm8SGQ4jijQWWzjb4pMAnuiXxS1KQ8q/n/oradbclouducm/b/dbsec_public/o/tls.zip
+    wget -v -O tls.zip https://objectstorage.us-ashburn-1.oraclecloud.com/p/BHNwcP7_8g6cj9ap6j8r3rjBky44eNnrTsm8SGQ4jijQWWzjb4pMAnuiXxS1KQ8q/n/oradbclouducm/b/dbsec_public/o/tls.zip
     </copy>
     ```
 
@@ -90,7 +90,7 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
     ```bash
     <copy>
     unzip tls.zip
-    rm -f tls.zip
+    rm -vf tls.zip
     </copy>
     ```
 
@@ -99,8 +99,8 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
     ```bash
     <copy>
     cd tls
-    chmod +x -- *.sh
-    if command -v dos2unix >/dev/null 2>&1; then dos2unix -- *; else echo "dos2unix is not installed; the bundled scripts already use Unix line endings."; fi
+    chmod -v +x -- *.sh
+    if command -v dos2unix >/dev/null 2>&1; then dos2unix -v -- *; else echo "dos2unix is not installed; the bundled scripts already use Unix line endings."; fi
     </copy>
     ```
 
@@ -140,11 +140,7 @@ Run these scripts from the extracted `livelabs/tls` directory on the database ho
 
     ```bash
     <copy>
-    grep -Ei '^[[:space:]]*(SSL_CLIENT_AUTHENTICATION|TLS_VERSION)[[:space:]]*=' \
-      "${TNS_ADMIN:-$ORACLE_HOME/network/admin}/sqlnet.ora" \
-      "${TNS_ADMIN:-$ORACLE_HOME/network/admin}/listener.ora"
-    grep -n "^[[:space:]]*${PDB_NAME}_tls[[:space:]]*=" \
-      "${TNS_ADMIN:-$ORACLE_HOME/network/admin}/tnsnames.ora"
+    ./tls_verify_host.sh
     </copy>
     ```
 

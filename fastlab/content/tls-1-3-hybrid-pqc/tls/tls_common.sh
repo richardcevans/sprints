@@ -223,6 +223,15 @@ tls_append_line() {
     fi
 }
 
+tls_append_raw_line() {
+    local file=$1 line=$2
+    if tls_file_writable "$file"; then
+        printf '%s\n' "$line" >> "$file"
+    else
+        printf '%s\n' "$line" | tls_run_as_root tee -a "$file" >/dev/null
+    fi
+}
+
 tls_set_parameter() {
     local file=$1 key=$2 value=$3
     tls_edit_in_place "$file" -E "/^[[:space:]]*${key}[[:space:]]*=/d"

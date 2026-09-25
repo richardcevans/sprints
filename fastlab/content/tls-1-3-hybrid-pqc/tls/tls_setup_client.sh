@@ -35,7 +35,7 @@ fi
 
 if ! grep -Eiq "^[[:space:]]*${TLS_TNS_ALIAS}[[:space:]]*=" "$CLIENT_TNSNAMES"; then
     while IFS= read -r line; do
-        [[ -n $line ]] && tls_append_line "$CLIENT_TNSNAMES" "$line"
+        [[ -n $line ]] && tls_append_raw_line "$CLIENT_TNSNAMES" "$line"
     done <<EOF
 
 $TLS_TNS_ALIAS =

@@ -47,7 +47,7 @@ if grep -Eiq 'PROTOCOL[[:space:]]*=[[:space:]]*TCPS' "$LISTENER_FILE"; then
     HAD_TCPS=1
 elif ! grep -Eiq "^[[:space:]]*${TLS_LISTENER_NAME}[[:space:]]*=" "$LISTENER_FILE"; then
     while IFS= read -r line; do
-        [[ -n $line ]] && tls_append_line "$LISTENER_FILE" "$line"
+        [[ -n $line ]] && tls_append_raw_line "$LISTENER_FILE" "$line"
     done <<EOF
 
 $TLS_LISTENER_NAME =
@@ -67,7 +67,7 @@ if grep -Eiq "^[[:space:]]*${TLS_TNS_ALIAS}[[:space:]]*=" "$TNSNAMES_FILE"; then
     printf '%s\n' "TNS alias already exists: $TLS_TNS_ALIAS"
 else
     while IFS= read -r line; do
-        [[ -n $line ]] && tls_append_line "$TNSNAMES_FILE" "$line"
+        [[ -n $line ]] && tls_append_raw_line "$TNSNAMES_FILE" "$line"
     done <<EOF
 
 $TLS_TNS_ALIAS =
@@ -79,9 +79,9 @@ $TLS_TNS_ALIAS =
     )
 EOF
     if [[ -n ${TLS_TNS_TLS_VERSION:-} ]]; then
-        tls_append_line "$TNSNAMES_FILE" "    (SECURITY = (TLS_VERSION = $TLS_TNS_TLS_VERSION))"
+        tls_append_raw_line "$TNSNAMES_FILE" "    (SECURITY = (TLS_VERSION = $TLS_TNS_TLS_VERSION))"
     fi
-    tls_append_line "$TNSNAMES_FILE" '  )'
+    tls_append_raw_line "$TNSNAMES_FILE" '  )'
 fi
 
 printf '%s\n' "Updated $SQLNET_FILE:"
