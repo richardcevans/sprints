@@ -141,9 +141,9 @@ The client setup writes `WALLET_LOCATION` to `sqlnet.ora` so the client can vali
     echo "ORACLE_HOME=$ORACLE_HOME"
     echo "TNS_ADMIN=${TNS_ADMIN:-$ORACLE_HOME/network/admin}"
     </copy>
-
-If `/etc/oratab` contains multiple database entries for the same `ORACLE_HOME`, set both `ORACLE_HOME` and `ORACLE_SID` explicitly. The scripts stop rather than guess which database to change.
     ```
+
+    If `/etc/oratab` contains multiple database entries for the same `ORACLE_HOME`, set both `ORACLE_HOME` and `ORACLE_SID` explicitly. The scripts stop rather than guess which database to change.
 
 2. Configure TLS 1.2 and TLS 1.3. Hybrid key exchange remains disabled until Task 4.
 
