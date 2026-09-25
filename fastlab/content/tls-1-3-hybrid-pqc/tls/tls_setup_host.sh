@@ -43,7 +43,6 @@ if [[ ${TLS_CONFIGURE_TLS13:-YES} == YES ]]; then
 fi
 
 HAD_TCPS=0
-ADDED_LISTENER=0
 if grep -Eiq 'PROTOCOL[[:space:]]*=[[:space:]]*TCPS' "$LISTENER_FILE"; then
     HAD_TCPS=1
     EXISTING_TCPS_PORT=$(awk '
@@ -66,22 +65,8 @@ if grep -Eiq 'PROTOCOL[[:space:]]*=[[:space:]]*TCPS' "$LISTENER_FILE"; then
     else
         tls_warn "A TCPS address exists in $LISTENER_FILE, but its port could not be detected; using TLS_TCPS_PORT=$TLS_TCPS_PORT."
     fi
-elif ! grep -Eiq "^[[:space:]]*${TLS_LISTENER_NAME}[[:space:]]*=" "$LISTENER_FILE"; then
-    while IFS= read -r line; do
-        [[ -n $line ]] && tls_append_raw_line "$LISTENER_FILE" "$line"
-    done <<EOF
-
-$TLS_LISTENER_NAME =
-  (DESCRIPTION_LIST =
-    (DESCRIPTION =
-      (ADDRESS = (PROTOCOL = TCP)(HOST = $TLS_SERVER_HOST)(PORT = $TLS_TCP_PORT))
-      (ADDRESS = (PROTOCOL = TCPS)(HOST = $TLS_SERVER_HOST)(PORT = $TLS_TCPS_PORT))
-    )
-  )
-EOF
-    ADDED_LISTENER=1
 else
-    tls_warn "${TLS_LISTENER_NAME} already exists but no TCPS address was found; review $LISTENER_FILE before testing."
+    tls_die "No TCPS listener address was found in $LISTENER_FILE. Complete the Oracle one-way TLS workshop first; this FastLab does not create or start a TCPS listener."
 fi
 
 if grep -Eiq "^[[:space:]]*${TLS_TNS_ALIAS}[[:space:]]*=" "$TNSNAMES_FILE"; then
@@ -112,9 +97,7 @@ cat -- "$LISTENER_FILE"
 printf '%s\n' "Updated $TNSNAMES_FILE:"
 tail -30 -- "$TNSNAMES_FILE"
 
-if (( ADDED_LISTENER == 1 )); then
-    "$LSNRCTL" start "$TLS_LISTENER_NAME"
-elif (( HAD_TCPS == 1 )); then
+if (( HAD_TCPS == 1 )); then
     if ! "$LSNRCTL" reload "$TLS_LISTENER_NAME" >/dev/null 2>&1; then
         "$LSNRCTL" reload
     fi

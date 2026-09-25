@@ -43,7 +43,7 @@ This lab assumes you have:
 - OS access to the database host and client configuration files as the appropriate Oracle software owner.
 - A working TCPS alias based on `PDB_NAME`, such as `${PDB_NAME}_tls`, plus database credentials for the lab PDB.
 
-**Running this lab on Oracle Database 19.32 instead of 26ai:** TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before Task 2, switch providers and restart:
+**Running this lab on Oracle Database 19.32 instead of 26ai:** TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before Task 2, switch providers and restart. See the [Oracle Database 19c documentation on switching cryptographic providers](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/switching-crypto-providers.html):
 
 ```bash
 <copy>
@@ -106,7 +106,7 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
 
 ## Task 2: Configure TLS 1.2 and TLS 1.3 on the host
 
-Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. They back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and reload or start the listener. They use Oracle's recommended TCPS port `2484` when creating a new endpoint and reuse an existing TCPS listener port when one is already configured. They do not create wallets or certificates.
+Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. They back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and reload the existing listener. They reuse the existing TCPS listener port. They do not create wallets, certificates, or a TCPS listener.
 
 1. Confirm the variables and Oracle Net locations.
 
@@ -270,11 +270,11 @@ If TLS 1.3 fails, confirm hybrid support on both DB26ai endpoints. Reload the li
 
 Use `tls_restore.sh` to restore the original Oracle Net files saved before the lab. The script backs up the current files first, requires explicit confirmation, reloads the listener, and re-registers database services. It does not change wallets or certificates.
 
-```bash
-<copy>
-./tls_restore.sh --yes-i-understand
-</copy>
-```
+    ```bash
+    <copy>
+    ./tls_restore.sh --yes-i-understand
+    </copy>
+    ```
 
 The default `original` selector restores the `.before-tls-fastlab` backups. To restore a timestamped backup instead, set `TLS_RESTORE_BACKUP` to the timestamp suffix.
 
