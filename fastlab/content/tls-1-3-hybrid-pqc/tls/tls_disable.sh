@@ -33,6 +33,7 @@ LSNRCTL=$(tls_require_oracle_bin lsnrctl)
 "$LSNRCTL" reload "${TLS_LISTENER_NAME}" 2>/dev/null || "$LSNRCTL" reload 2>/dev/null || true
 
 if [[ ${TLS_REMOVE_WALLETS:-NO} == YES ]]; then
+    tls_backup_directory "$TLS_DIR"
     tls_backup_file "$TLS_DIR/ewallet.p12"
     tls_backup_file "$TLS_DIR/cwallet.sso"
     tls_backup_file "$ORA_TLS_DIR/ewallet.p12"
@@ -41,6 +42,7 @@ if [[ ${TLS_REMOVE_WALLETS:-NO} == YES ]]; then
     tls_safe_remove_dir "$ORA_TLS_DIR"
 fi
 if [[ ${TLS_REMOVE_CERTS:-NO} == YES ]]; then
+    tls_backup_directory "$TLS_WORK_DIR"
     tls_backup_file "$TLS_ROOT_CERT"
     tls_backup_file "$TLS_CSR"
     tls_backup_file "$TLS_SIGNED_CERT"

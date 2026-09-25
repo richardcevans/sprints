@@ -6,6 +6,27 @@ Configure TLS 1.2 and TLS 1.3 on Oracle AI Database 19.32 or Oracle AI Database 
 
 Estimated Time: 15 minutes
 
+Before running any script, confirm that this is a disposable, non-production system.
+
+The scripts require the exact acknowledgement `NON_PROD_TLS_ACCEPTANCE=YES`. Type the acknowledgement manually; this lab intentionally does not provide a Copy button for it.
+
+```bash
+export NON_PROD_TLS_ACCEPTANCE=YES
+```
+
+For a persistent setting, type these lines manually to add it to `.bashrc` and reload the shell:
+
+```bash
+echo 'export NON_PROD_TLS_ACCEPTANCE=YES' >> ~/.bashrc
+source ~/.bashrc
+```
+
+For the current shell only, type:
+
+```bash
+export NON_PROD_TLS_ACCEPTANCE=YES
+```
+
 Before you begin, set `PDB_NAME` in the shell used for this lab. The scripts use it for the database service and generated TNS aliases. If it is not set, the scripts default to `pdb1`.
 
 For a persistent setting, add it to `.bashrc` and reload the shell:
@@ -106,7 +127,7 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
 
 ## Task 2: Configure TLS 1.2 and TLS 1.3 on the host
 
-Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. They back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and add or update the TCPS listener endpoint. They use Oracle's recommended TCPS port `2484` when adding a new endpoint and reuse an existing TCPS listener port when one is already configured. They do not create wallets or certificates.
+Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. Before writing, they make timestamped backups of the existing Oracle Net files and wallet directories, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and add or update the TCPS listener endpoint. They use Oracle's recommended TCPS port `2484` when adding a new endpoint and reuse an existing TCPS listener port when one is already configured. They do not create or modify wallets or certificates.
 
 By default, the host setup restarts the listener so new TCPS endpoints and wallet settings take effect. The listener wallet path is `${WALLET_ROOT}`; set `TLS_LISTENER_WALLET_DIR` when the existing listener wallet is elsewhere.
 
@@ -120,6 +141,8 @@ The client setup writes `WALLET_LOCATION` to `sqlnet.ora` so the client can vali
     echo "ORACLE_HOME=$ORACLE_HOME"
     echo "TNS_ADMIN=${TNS_ADMIN:-$ORACLE_HOME/network/admin}"
     </copy>
+
+If `/etc/oratab` contains multiple database entries for the same `ORACLE_HOME`, set both `ORACLE_HOME` and `ORACLE_SID` explicitly. The scripts stop rather than guess which database to change.
     ```
 
 2. Configure TLS 1.2 and TLS 1.3. Hybrid key exchange remains disabled until Task 4.
@@ -273,7 +296,7 @@ If TLS 1.3 fails, confirm the selected release and provider, then confirm hybrid
 
 ### Optional rollback
 
-Use `tls_restore.sh` to restore the original Oracle Net files saved before the lab. The script backs up the current files first, requires explicit confirmation, reloads the listener, and re-registers database services. It does not change wallets or certificates.
+Use `tls_restore.sh` to restore the original Oracle Net files saved before the lab. The script backs up the current files first, requires the non-production acknowledgement and explicit rollback confirmation, restarts the listener, and re-registers database services. It does not change wallets or certificates; wallet-directory backups are retained.
 
     ```bash
     <copy>

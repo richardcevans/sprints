@@ -23,6 +23,7 @@ fi
 if [[ ! -f $TLS_LISTENER_WALLET_DIR/cwallet.sso && ! -f $TLS_LISTENER_WALLET_DIR/ewallet.p12 ]]; then
     tls_die "No listener wallet was found in $TLS_LISTENER_WALLET_DIR. This FastLab does not create wallets."
 fi
+tls_backup_directory "$TLS_LISTENER_WALLET_DIR"
 # any of the files under ORACLE_HOME/ORACLE_BASE.
 for file in "$SQLNET_FILE" "$LISTENER_FILE" "$TNSNAMES_FILE"; do
     tls_backup_file "$file"

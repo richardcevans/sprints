@@ -11,6 +11,7 @@ ORAPKI=$(tls_require_oracle_bin orapki)
 tls_require_file "$TLS_SIGNED_CERT"
 
 printf '%s\n' 'Importing the signed database certificate into the database wallet.'
+tls_backup_directory "$DB_TLS_DIR"
 tls_backup_file "$DB_TLS_DIR/ewallet.p12"
 tls_backup_file "$DB_TLS_DIR/cwallet.sso"
 "$ORAPKI" wallet display -wallet "$DB_TLS_DIR" -pwd "$TLS_PASSWORD" | tls_filter_orapki

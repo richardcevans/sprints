@@ -20,6 +20,7 @@ fi
 if [[ ! -f $TLS_CLIENT_WALLET_DIR/cwallet.sso && ! -f $TLS_CLIENT_WALLET_DIR/ewallet.p12 ]]; then
     tls_die "No client wallet was found in $TLS_CLIENT_WALLET_DIR. This FastLab does not create wallets."
 fi
+tls_backup_directory "$TLS_CLIENT_WALLET_DIR"
 
 # Back up both client files before creating a directory or touching anything in
 # the client configuration location. TNS_ADMIN can point to this directory.

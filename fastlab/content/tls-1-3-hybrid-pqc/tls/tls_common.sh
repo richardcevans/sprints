@@ -34,6 +34,10 @@ other fuckup caused by their use.
 WARNING
 }
 
+tls_require_non_prod_acceptance() {
+    [[ ${NON_PROD_TLS_ACCEPTANCE:-NO} == YES ]] || tls_die 'Set NON_PROD_TLS_ACCEPTANCE=YES in this shell after confirming this is a disposable non-production system.'
+}
+
 tls_check_oracle_linux() {
     [[ ${TLS_SKIP_OS_CHECK:-NO} == YES ]] && return 0
     if [[ ! -r /etc/os-release ]]; then
@@ -75,6 +79,16 @@ tls_resolve_oracle() {
 
     if [[ -z $home && -n $sid ]]; then
         home=$(tls_oratab_home_for_sid "$sid")
+    fi
+
+    if [[ -n $home && -z $sid && -n $file ]]; then
+        candidates=$(awk -F: -v wanted_home="$home" '$0 !~ /^[[:space:]]*#/ && $1 != "" && $2 == wanted_home { print $1 }' "$file" | sort -u)
+        count=$(printf '%s\n' "$candidates" | awk 'NF { n++ } END { print n + 0 }')
+        if [[ $count == 1 ]]; then
+            sid=$candidates
+        elif [[ $count -gt 1 ]]; then
+            tls_die "More than one database in $file uses ORACLE_HOME=$home. Set ORACLE_SID before running this script."
+        fi
     fi
 
     if [[ -z $home && -n $file ]]; then
@@ -168,6 +182,7 @@ tls_load_defaults() {
 
 tls_init() {
     tls_print_warning
+    tls_require_non_prod_acceptance
     tls_check_oracle_linux
     if [[ ${1:-} != --no-oracle ]]; then
         tls_resolve_oracle
@@ -307,6 +322,9 @@ tls_backup_file() {
     backup="${file}.before-tls-fastlab"
     if [[ -e $backup ]]; then
         backup="${file}.before-tls-fastlab.$(date +%Y%m%d%H%M%S)"
+        while [[ -e $backup ]]; do
+            backup="${file}.before-tls-fastlab.$(date +%Y%m%d%H%M%S).$RANDOM"
+        done
     fi
     if tls_file_writable "$file" && [[ -w $(dirname -- "$file") ]]; then
         cp -p -- "$file" "$backup"
@@ -314,6 +332,24 @@ tls_backup_file() {
         tls_run_as_root cp -p -- "$file" "$backup"
     fi
     printf 'Backup: %s\n' "$backup"
+}
+
+tls_backup_directory() {
+    local directory=$1 backup
+    [[ -d $directory ]] || return 0
+    backup="${directory}.before-tls-fastlab"
+    if [[ -e $backup ]]; then
+        backup="${directory}.before-tls-fastlab.$(date +%Y%m%d%H%M%S)"
+        while [[ -e $backup ]]; do
+            backup="${directory}.before-tls-fastlab.$(date +%Y%m%d%H%M%S).$RANDOM"
+        done
+    fi
+    if [[ -w $(dirname -- "$directory") ]]; then
+        cp -a -- "$directory" "$backup"
+    else
+        tls_run_as_root cp -a -- "$directory" "$backup"
+    fi
+    printf 'Directory backup: %s\n' "$backup"
 }
 
 tls_restore_file_from_backup() {

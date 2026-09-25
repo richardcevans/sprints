@@ -14,6 +14,15 @@ tls_require_file "$DB_TLS_DIR/ewallet.p12"
 printf '%s\n' "Deploying the database wallet to $TLS_DIR and client wallet $ORA_TLS_DIR."
 wallet_root_sql=${WALLET_ROOT//\'/\'\'}
 
+# Preserve any deployed wallet files before changing WALLET_ROOT, restarting the
+# database, creating directories, or copying into ORACLE_BASE-derived paths.
+tls_backup_directory "$TLS_DIR"
+tls_backup_directory "$ORA_TLS_DIR"
+tls_backup_file "$TLS_DIR/ewallet.p12"
+tls_backup_file "$TLS_DIR/cwallet.sso"
+tls_backup_file "$ORA_TLS_DIR/ewallet.p12"
+tls_backup_file "$ORA_TLS_DIR/cwallet.sso"
+
 if [[ ${TLS_SET_WALLET_ROOT:-YES} == YES ]]; then
     if [[ ${TLS_RESTART_DATABASE:-YES} == YES ]]; then
         "$SQLPLUS" -s / as sysdba <<SQL
@@ -33,12 +42,6 @@ SQL
     fi
 fi
 
-# Preserve any deployed wallet files before creating directories or copying
-# into locations derived from WALLET_ROOT/ORACLE_BASE.
-tls_backup_file "$TLS_DIR/ewallet.p12"
-tls_backup_file "$TLS_DIR/cwallet.sso"
-tls_backup_file "$ORA_TLS_DIR/ewallet.p12"
-tls_backup_file "$ORA_TLS_DIR/cwallet.sso"
 
 mkdir -p -- "$TLS_DIR" "$ORA_TLS_DIR" 2>/dev/null || tls_run_as_root mkdir -p -- "$TLS_DIR" "$ORA_TLS_DIR"
 if ! cp -p -- "$DB_TLS_DIR/ewallet.p12" "$DB_TLS_DIR/cwallet.sso" "$TLS_DIR/" 2>/dev/null; then
