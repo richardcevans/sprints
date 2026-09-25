@@ -12,6 +12,7 @@ tls_require_file "$TLS_CSR"
 tls_require_file "$ROOT_TLS_DIR/ewallet.p12"
 
 printf '%s\n' "Signing $TLS_CSR with the root CA wallet."
+tls_backup_file "$TLS_SIGNED_CERT"
 "$ORAPKI" cert create -wallet "$ROOT_TLS_DIR" -request "$TLS_CSR" \
     -cert "$TLS_SIGNED_CERT" -validity "${TLS_CERT_VALIDITY_DAYS:-3652}" \
     -sign_alg sha256 -pwd "$TLS_PASSWORD" | tls_filter_orapki

@@ -137,17 +137,20 @@ tls_load_defaults() {
         TLS_CLIENT_HOME="${TLS_CLIENT_HOME:-${HOME:-$TLS_SCRIPT_DIR}}"
     fi
     export TLS_CLIENT_HOME
-    export DAN_TNS_DIR="${DAN_TNS_DIR:-${TLS_CLIENT_TNS_ADMIN:-$TLS_CLIENT_HOME/tns_admin}}"
+    export DAN_TNS_DIR="${DAN_TNS_DIR:-${TLS_CLIENT_TNS_ADMIN:-${TNS_ADMIN:-$TLS_CLIENT_HOME/tns_admin}}}"
     export DAN_CLIENT_TLS_DIR="${DAN_CLIENT_TLS_DIR:-$DAN_TNS_DIR/client_wallet}"
     export TLS_CLIENT_TNS_ADMIN="$DAN_TNS_DIR"
     export TLS_SERVER_HOST="${TLS_SERVER_HOST:-${TLS_HOST:-$(hostname -f 2>/dev/null || hostname)}}"
     export TLS_TCP_PORT="${TLS_TCP_PORT:-1521}"
     export TLS_TCPS_PORT="${TLS_TCPS_PORT:-1522}"
-    export TLS_TNS_ALIAS="${TLS_TNS_ALIAS:-pdb1_tls}"
-    export TLS_SERVICE_NAME="${TLS_SERVICE_NAME:-${ORACLE_PDB:-${SERVICE_NAME:-$ORACLE_SID}}}"
+    export PDB_NAME="${PDB_NAME:-pdb1}"
+    export TLS_TNS_ALIAS="${TLS_TNS_ALIAS:-${PDB_NAME}_tls}"
+    export TLS_SERVICE_NAME="${TLS_SERVICE_NAME:-$PDB_NAME}"
     export TLS_LISTENER_NAME="${TLS_LISTENER_NAME:-LISTENER_TLS}"
     export TLS_VERSION_LIST="${TLS_VERSION_LIST:-TLSv1.2,TLSv1.3}"
+    export TLS_CONFIGURE_TLS13="${TLS_CONFIGURE_TLS13:-YES}"
     export TLS_KEY_EXCHANGE_GROUPS="${TLS_KEY_EXCHANGE_GROUPS:-hybrid,ec}"
+    export TLS_CONFIGURE_HYBRID="${TLS_CONFIGURE_HYBRID:-NO}"
     export TLS_ROOT_DN="${TLS_ROOT_DN:-C=US,CN=Oracle TLS Lab Root CA}"
     export TLS_SERVER_DN="${TLS_SERVER_DN:-CN=$TLS_SERVER_HOST,OU=Oracle TLS Lab,O=Oracle,C=US}"
     export TLS_ROOT_CERT="${TLS_ROOT_CERT:-$ROOT_TLS_DIR/rootCA.crt}"
@@ -166,6 +169,7 @@ tls_init() {
         tls_resolve_oracle
     fi
     tls_load_defaults
+    printf 'Using PDB_NAME=%s\n' "$PDB_NAME"
     printf 'Using ORACLE_HOME=%s ORACLE_SID=%s TNS_ADMIN=%s\n' "${ORACLE_HOME:-<not set>}" "${ORACLE_SID:-<not set>}" "$TNS_ADMIN"
 }
 

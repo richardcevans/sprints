@@ -10,6 +10,9 @@ tls_require_password
 ORAPKI=$(tls_require_oracle_bin orapki)
 
 printf '%s\n' 'Creating the root CA wallet and self-signed certificate.'
+tls_backup_file "$ROOT_TLS_DIR/ewallet.p12"
+tls_backup_file "$ROOT_TLS_DIR/cwallet.sso"
+tls_backup_file "$TLS_ROOT_CERT"
 mkdir -p -- "$ROOT_TLS_DIR"
 
 if [[ ! -f $ROOT_TLS_DIR/ewallet.p12 && ! -f $ROOT_TLS_DIR/cwallet.sso ]]; then

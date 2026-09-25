@@ -33,6 +33,13 @@ SQL
     fi
 fi
 
+# Preserve any deployed wallet files before creating directories or copying
+# into locations derived from WALLET_ROOT/ORACLE_BASE.
+tls_backup_file "$TLS_DIR/ewallet.p12"
+tls_backup_file "$TLS_DIR/cwallet.sso"
+tls_backup_file "$ORA_TLS_DIR/ewallet.p12"
+tls_backup_file "$ORA_TLS_DIR/cwallet.sso"
+
 mkdir -p -- "$TLS_DIR" "$ORA_TLS_DIR" 2>/dev/null || tls_run_as_root mkdir -p -- "$TLS_DIR" "$ORA_TLS_DIR"
 if ! cp -p -- "$DB_TLS_DIR/ewallet.p12" "$DB_TLS_DIR/cwallet.sso" "$TLS_DIR/" 2>/dev/null; then
     tls_run_as_root cp -p -- "$DB_TLS_DIR/ewallet.p12" "$DB_TLS_DIR/cwallet.sso" "$TLS_DIR/"

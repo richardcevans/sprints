@@ -6,6 +6,25 @@ Configure TLS 1.2 and TLS 1.3 on Oracle AI Database 26ai. Prefer hybrid key exch
 
 Estimated Time: 15 minutes
 
+Before you begin, set `PDB_NAME` in the shell used for this lab. The scripts use it for the database service and generated TNS aliases. If it is not set, the scripts default to `pdb1`.
+
+For a persistent setting, add it to `.bashrc` and reload the shell:
+
+    ```bash
+    <copy>
+    echo 'export PDB_NAME=pdb1' >> ~/.bashrc
+    source ~/.bashrc
+    </copy>
+    ```
+
+For the current shell only, run:
+
+    ```bash
+    <copy>
+    export PDB_NAME=pdb1
+    </copy>
+    ```
+
 ### Objectives
 
 In this lab, you will:
@@ -22,9 +41,9 @@ This lab assumes you have:
 - An Oracle AI Database 26ai server and a DB26ai client with TLS 1.3 support.
 - An existing one-way TLS configuration with a working TCPS listener, server certificate, and trusted client certificate chain.
 - OS access to the database host and client configuration files as the appropriate Oracle software owner.
-- A working TCPS alias such as `pdb1_tls`, plus database credentials for the lab PDB.
+- A working TCPS alias based on `PDB_NAME`, such as `${PDB_NAME}_tls`, plus database credentials for the lab PDB.
 
-**Running this lab on Oracle Database 19.32 instead of 26ai:** TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before Task 3, switch providers and restart:
+**Running this lab on Oracle Database 19.32 instead of 26ai:** TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before Task 2, switch providers and restart:
 
     ```bash
     <copy>
@@ -32,7 +51,7 @@ This lab assumes you have:
     </copy>
     ```
 
-    Restart the database instance and reload the listener after the switch. Confirm the provider is active before proceeding to Task 3:
+    Restart the database instance and reload the listener after the switch. Confirm the provider is active before proceeding to Task 2:
 
     ```bash
     <copy>
@@ -85,29 +104,63 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
     </copy>
     ```
 
-## Task 2: Inspect the existing TLS connection
+## Task 2: Configure TLS 1.2 and TLS 1.3 on the host
 
-Start from a known-good TCPS connection. The `SYS_CONTEXT` values show the connection protocol, negotiated TLS version, and record-layer cipher suite.
+Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. They back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and reload or start the listener. They do not create wallets or certificates.
 
-1. Open a terminal on the database client and confirm the Oracle Net locations.
-
-    ```bash
-    <copy>
-    echo "$ORACLE_HOME"
-    echo "$TNS_ADMIN"
-    lsnrctl status
-    </copy>
-    ```
-
-2. Connect with the existing TCPS alias. Replace `db_user` with a database user from your lab environment and enter its password when prompted.
+1. Confirm the variables and Oracle Net locations.
 
     ```bash
     <copy>
-    sqlplus db_user@pdb1_tls
+    echo "PDB_NAME=$PDB_NAME"
+    echo "ORACLE_HOME=$ORACLE_HOME"
+    echo "TNS_ADMIN=${TNS_ADMIN:-$ORACLE_HOME/network/admin}"
     </copy>
     ```
 
-3. Verify that the connection uses TCPS and record the current TLS values.
+2. Configure TLS 1.2 and TLS 1.3. Hybrid key exchange remains disabled until Task 4.
+
+    ```bash
+    <copy>
+    export TLS_CONFIGURE_TLS13=YES
+    export TLS_CONFIGURE_HYBRID=NO
+    ./tls_setup_host.sh
+    </copy>
+    ```
+
+    If the client uses a separate host, run the combined client setup script there after setting the same `PDB_NAME` and `TNS_ADMIN`:
+
+    ```bash
+    <copy>
+    ./tls_setup_client.sh
+    </copy>
+    ```
+
+3. Confirm the host configuration and generated alias.
+
+    ```bash
+    <copy>
+    grep -Ei '^[[:space:]]*(SSL_CLIENT_AUTHENTICATION|TLS_VERSION)[[:space:]]*=' \
+      "${TNS_ADMIN:-$ORACLE_HOME/network/admin}/sqlnet.ora" \
+      "${TNS_ADMIN:-$ORACLE_HOME/network/admin}/listener.ora"
+    grep -n "^[[:space:]]*${PDB_NAME}_tls[[:space:]]*=" \
+      "${TNS_ADMIN:-$ORACLE_HOME/network/admin}/tnsnames.ora"
+    </copy>
+    ```
+
+## Task 3: Inspect the TLS connection
+
+Connect through the `${PDB_NAME}_tls` alias and record the protocol, negotiated TLS version, and record-layer cipher suite.
+
+1. Connect with the generated TCPS alias. Replace `db_user` with a database user from your lab environment and enter its password when prompted.
+
+    ```bash
+    <copy>
+    sqlplus "db_user@${PDB_NAME}_tls"
+    </copy>
+    ```
+
+2. Verify the connection values.
 
     ```sql
     <copy>
@@ -118,75 +171,51 @@ Start from a known-good TCPS connection. The `SYS_CONTEXT` values show the conne
     </copy>
     ```
 
-    The `NETWORK_PROTOCOL` value should be `tcps`. Keep this session open while you update the configuration, or exit and reconnect after the listener reload.
-
-## Task 3: Permit TLS 1.2 and TLS 1.3
-
-Oracle AI Database 26ai supports TLS 1.2 and TLS 1.3. Set the same compatible protocol list on the database server, listener, and client components used by this lab.
-
-1. Back up the server network files before editing them.
-
-    ```bash
-    <copy>
-    export NET_ADMIN="${ORACLE_HOME}/network/admin"
-    cp -p "$NET_ADMIN/sqlnet.ora" "$NET_ADMIN/sqlnet.ora.before-tls-hybrid-fastlab"
-    cp -p "$NET_ADMIN/listener.ora" "$NET_ADMIN/listener.ora.before-tls-hybrid-fastlab"
-    </copy>
-    ```
-
-2. Edit the server `sqlnet.ora` and add the following parameter. If a `TLS_VERSION` entry already exists, replace its value rather than creating a second entry.
-
-    ```text
-    <copy>
-    TLS_VERSION=(TLSv1.2,TLSv1.3)
-    </copy>
-    ```
-
-3. Add the same `TLS_VERSION` entry to the listener `listener.ora` and to the client `sqlnet.ora` used by `pdb1_tls`. On a single-host lab, these files may be under the same network administration directory. On a separate client, edit the client file selected by `TNS_ADMIN`.
-
-4. Reload the listener after saving `listener.ora`.
-
-    ```bash
-    <copy>
-    lsnrctl reload
-    </copy>
-    ```
-
-    The client and server must have at least one TLS version in common. Listing both versions preserves TLS 1.2 compatibility while allowing a TLS 1.3-capable client to negotiate TLS 1.3.
+    `NETWORK_PROTOCOL` should be `tcps`. Keep this session open while you update the configuration, or exit and reconnect after a listener reload.
 
 ## Task 4: Prefer hybrid key exchange
 
 `TLS_KEY_EXCHANGE_GROUPS` controls key-establishment groups. The `hybrid` group combines ML-KEM and ECDHE into one shared secret. It changes key establishment, not the record cipher shown by `TLS_CIPHERSUITE`.
 
-1. Add it to the server and listener files, then to the client `sqlnet.ora`.
-
-    ```text
-    <copy>
-    TLS_KEY_EXCHANGE_GROUPS=hybrid,ec
-    </copy>
-    ```
-
-    `hybrid` is listed first so DB26ai endpoints that support hybrid PQC prefer it. `ec` provides a classical ECDHE fallback for a TLS 1.3 client that cannot negotiate hybrid. ML-KEM and hybrid key exchange apply only to TLS 1.3.
-
-2. Reload the listener and confirm the effective configuration entries.
+1. Enable hybrid key exchange on the database host. The scripts update the server and listener configuration and retain the backups created in Task 2.
 
     ```bash
     <copy>
-    lsnrctl reload
-    grep -Ei '^[[:space:]]*(TLS_VERSION|TLS_KEY_EXCHANGE_GROUPS)[[:space:]]*=' \
-      "$NET_ADMIN/sqlnet.ora" "$NET_ADMIN/listener.ora"
+    export TLS_CONFIGURE_HYBRID=YES
+    ./tls_setup_host.sh
     </copy>
     ```
 
-    If the client uses a separate `TNS_ADMIN` directory, run the same `grep` check against that client `sqlnet.ora`.
+    If the client uses a separate host, run the combined client setup script there with the same `PDB_NAME`:
+
+    ```bash
+    <copy>
+    export TLS_CONFIGURE_HYBRID=YES
+    ./tls_setup_client.sh
+    </copy>
+    ```
+
+    `hybrid` is listed first so endpoints that support hybrid PQC prefer it. `ec` provides a classical ECDHE fallback for a TLS 1.3 client that cannot negotiate hybrid. ML-KEM and hybrid key exchange apply only to TLS 1.3.
+
+2. Confirm the effective configuration entries.
+
+    ```bash
+    <copy>
+    grep -Ei '^[[:space:]]*(TLS_VERSION|TLS_KEY_EXCHANGE_GROUPS)[[:space:]]*=' \
+      "${TNS_ADMIN:-$ORACLE_HOME/network/admin}/sqlnet.ora" \
+      "${TNS_ADMIN:-$ORACLE_HOME/network/admin}/listener.ora"
+    </copy>
+    ```
+
+    The SQL context does not expose the negotiated group; the `TLS_CIPHERSUITE` value is not proof of hybrid key exchange.
 
 ## Task 5: Test TLS 1.3 and TLS 1.2
 
 Use connection-specific `TLS_VERSION` settings to prove that the endpoint accepts both versions.
 
-Copy the existing `pdb1_tls` entry twice. Keep its host, port, service, wallet, and other settings unchanged.
+Copy the existing `${PDB_NAME}_tls` entry twice. Keep its host, port, service, wallet, and other settings unchanged.
 
-1. Name the copied entries `pdb1_tls13` and `pdb1_tls12`. Add the following `SECURITY` section to each entry:
+1. Name the copied entries `${PDB_NAME}_tls13` and `${PDB_NAME}_tls12`. Add the following `SECURITY` section to each entry:
 
     ```text
     <copy>
@@ -194,13 +223,13 @@ Copy the existing `pdb1_tls` entry twice. Keep its host, port, service, wallet, 
     </copy>
     ```
 
-    Use `TLSv1.2` in the `pdb1_tls12` entry. In `tnsnames.ora`, do not wrap this value in parentheses; that form is for `sqlnet.ora` and `listener.ora`.
+    Use `TLSv1.2` in the `${PDB_NAME}_tls12` entry. In `tnsnames.ora`, do not wrap this value in parentheses; that form is for `sqlnet.ora` and `listener.ora`.
 
 2. Connect through the TLS 1.3 alias and verify the session.
 
     ```bash
     <copy>
-    sqlplus db_user@pdb1_tls13
+    sqlplus "db_user@${PDB_NAME}_tls13"
     </copy>
     ```
 
@@ -213,13 +242,13 @@ Copy the existing `pdb1_tls` entry twice. Keep its host, port, service, wallet, 
     </copy>
     ```
 
-    The result should show `tcps` and `TLSv1.3`. Both DB26ai endpoints support hybrid, so Task 4 makes it the preferred TLS 1.3 key exchange.
+    The result should show `tcps` and `TLSv1.3`. Both configured endpoints support hybrid, so Task 4 makes it the preferred TLS 1.3 key exchange.
 
 3. Exit SQL*Plus, connect through the TLS 1.2 alias, and run the same query.
 
     ```bash
     <copy>
-    sqlplus db_user@pdb1_tls12
+    sqlplus "db_user@${PDB_NAME}_tls12"
     </copy>
     ```
 
@@ -227,7 +256,7 @@ Copy the existing `pdb1_tls` entry twice. Keep its host, port, service, wallet, 
 
 ### Interpret the results
 
-1. Compare the `pdb1_tls13` and `pdb1_tls12` query results.
+1. Compare the `${PDB_NAME}_tls13` and `${PDB_NAME}_tls12` query results.
 
 2. Read the individual values as follows.
 
@@ -239,7 +268,7 @@ For this lab, hybrid is the expected TLS 1.3 result. Both endpoints support DB26
 The SQL context does not expose the negotiated group; the cipher output is not proof of hybrid key exchange.
 
 
-If TLS 1.3 fails, confirm hybrid support on both DB26ai endpoints. Reload the listener and check that the client uses the intended `TNS_ADMIN` files. If needed, restore the Task 3 backups and reload the listener.
+If TLS 1.3 fails, confirm hybrid support on both DB26ai endpoints. Reload the listener and check that the client uses the intended `TNS_ADMIN` files. If needed, restore the Task 2 backups and reload the listener.
 
 You may now proceed to the next lab.
 

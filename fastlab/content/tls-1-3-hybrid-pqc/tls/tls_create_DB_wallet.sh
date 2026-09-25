@@ -11,6 +11,9 @@ ORAPKI=$(tls_require_oracle_bin orapki)
 tls_require_file "$TLS_ROOT_CERT"
 
 printf '%s\n' "Creating the database wallet and certificate request in $DB_TLS_DIR."
+tls_backup_file "$DB_TLS_DIR/ewallet.p12"
+tls_backup_file "$DB_TLS_DIR/cwallet.sso"
+tls_backup_file "$TLS_CSR"
 mkdir -p -- "$DB_TLS_DIR"
 
 if [[ ! -f $DB_TLS_DIR/ewallet.p12 && ! -f $DB_TLS_DIR/cwallet.sso ]]; then
