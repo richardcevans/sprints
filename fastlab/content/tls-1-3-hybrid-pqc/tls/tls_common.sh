@@ -92,6 +92,7 @@ tls_resolve_oracle() {
     [[ -n $home ]] || tls_die 'ORACLE_HOME is not set and no unique Oracle home could be discovered from /etc/oratab.'
     [[ -d $home ]] || tls_die "ORACLE_HOME does not exist: $home"
 
+    ORACLE_HOME=$home
     export ORACLE_HOME
     if [[ -n $sid ]]; then
         export ORACLE_SID=$sid
