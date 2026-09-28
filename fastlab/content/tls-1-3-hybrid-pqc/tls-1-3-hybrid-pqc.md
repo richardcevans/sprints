@@ -311,6 +311,26 @@ Create Lisa's client environment as `oracle`, and then switch to the Lisa operat
     </copy>
     ```
 
+### Optional: Use a Windows client
+
+Lisa’s Oracle Linux client trusts the lab root CA through the host-wide Linux certificate store. A Windows client can use the same walletless one-way TLS model through the Microsoft Certificate Store, which Oracle Database clients support as a system certificate store. See [Oracle client configuration guidance for one-way TLS](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/configuring-transport-layer-security-encryption.html).
+
+Copy only the lab public root CA certificate, `certificates/rootCA/rootCA.crt`, from the database host to the Windows client. Do not copy the database server private key or wallet.
+
+1. Press **Win+R**, enter `certlm.msc`, and approve elevation.
+
+2. Expand **Trusted Root Certification Authorities**, and then select **Certificates**. The screenshot shows the Local Computer store where Windows makes trusted roots available across Windows accounts.
+
+    ![Windows Certificate Manager showing the Local Computer Trusted Root Certification Authorities certificate store](images/win11-certlm.png "Windows Local Computer trusted root certificate store")
+
+3. Right-click **Certificates**, select **All Tasks**, and then select **Import**.
+
+4. Select `rootCA.crt` and finish the Certificate Import Wizard. Import only the public root CA certificate; do not import a server private key or wallet.
+
+In the Windows `tnsnames.ora`, retain `(WALLET_LOCATION=SYSTEM)` in the `SECURITY` section of each TCPS alias. This explicitly tells SQL*Plus to validate the database server certificate with the Windows system certificate store. Keep server hostname matching enabled, and ensure that the alias `HOST` value matches the server certificate.
+
+With Windows Instant Client 26ai and those aliases configured, connect using the database username and password. This one-way TLS configuration does not require a client wallet.
+
 Database authentication still uses `system` and its database password. Lisa is the Linux client identity, not a database account. Use a least-privileged database account instead of `system` outside this disposable lab.
 
 ## Task 4: Prefer hybrid key exchange
