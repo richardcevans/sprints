@@ -418,6 +418,26 @@ Use `tls_restore.sh` to restore the original Oracle Net files saved before the l
 
 The default `original` selector restores the `.before-tls-fastlab` backups. To restore a timestamped backup instead, set `TLS_RESTORE_BACKUP` to the timestamp suffix.
 
+The restore script does not remove Lisa or uninstall Oracle Instant Client. If you want to remove either one, run the corresponding cleanup script independently. Each script requires the non-production acknowledgement and explicit destructive confirmation.
+
+To remove the `lisa` operating-system account and `/home/lisa`, first exit all Lisa sessions, and then run:
+
+    ```bash
+    <copy>
+    ./tls_remove_lisa.sh --yes-i-understand
+    </copy>
+    ```
+
+To remove the Oracle Instant Client Basic, SQL*Plus, and 26ai release RPMs installed by this lab, run:
+
+    ```bash
+    <copy>
+    ./tls_remove_ora_client.sh --yes-i-understand
+    </copy>
+    ```
+
+The package cleanup disables dependency autoremove and does not request removal of other Instant Client packages. Do not run it if another application uses these RPMs.
+
 You may now proceed to the next lab.
 
 
