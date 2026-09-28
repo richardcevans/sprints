@@ -161,7 +161,7 @@ By default, wallet deployment sets `WALLET_ROOT`, restarts the database, deploys
 
     After rebuilding the identity, continue with the deployment command in the next step so the corrected certificate chain replaces the previously deployed wallet.
 
-    If the earlier root certificate was already installed in the Oracle Linux trust store, use the `--replace` option in step 5.
+    If the earlier root certificate was already installed in the Oracle Linux trust store, use the `--recreate` option in step 5.
 
 4. Deploy the database wallet. By default, this command sets `WALLET_ROOT` and restarts the database before copying the wallet files.
 
@@ -179,11 +179,11 @@ By default, wallet deployment sets `WALLET_ROOT`, restarts the database, deploys
     </copy>
     ```
 
-    A normal installation refuses to overwrite a different certificate at the lab trust-anchor path. If you rebuilt the identity with `--recreate`, review the existing anchor, and then replace it explicitly:
+    A normal installation refuses to overwrite a different certificate at the lab trust-anchor path. If you rebuilt the identity with `--recreate`, review the existing anchor, and then recreate the installed trust anchor from the current public root CA certificate:
 
     ```bash
     <copy>
-    ./tls_install_linux_cert.sh --replace
+    ./tls_install_linux_cert.sh --recreate
     </copy>
     ```
 
