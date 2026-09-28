@@ -13,6 +13,6 @@ if [[ $mode != test ]]; then
 fi
 if [[ $mode != setup ]]; then
     # Only the validated PDB name crosses the login boundary. No DB password.
-    sudo -iu lisa /bin/bash /home/lisa/tns_admin/tls_test_lisa.sh "$PDB_NAME"
+    sudo -iu lisa /bin/bash /home/lisa/livelabs/tls/tls_test_lisa.sh "$PDB_NAME"
 fi
 printf 'Task 3 %s complete; you are still in your original shell.\n' "$mode"

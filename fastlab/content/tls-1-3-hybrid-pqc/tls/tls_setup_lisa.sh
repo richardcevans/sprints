@@ -56,18 +56,30 @@ if ! id lisa >/dev/null 2>&1; then sudo useradd -m -d /home/lisa -s /bin/bash li
 getent passwd lisa
 [[ $(getent passwd lisa | cut -d: -f6) == /home/lisa ]] || { echo 'Unexpected Lisa home.' >&2; exit 1; }
 group=$(id -gn lisa)
-target=/home/lisa/tns_admin
+config_target=/home/lisa/tns_admin
+lab_parent=/home/lisa/livelabs
+lab_target=$lab_parent/tls
 sudo test ! -L /home/lisa || { echo 'Refusing a symlinked home.' >&2; exit 1; }
-sudo test ! -L "$target" || { echo 'Refusing a symlinked configuration directory.' >&2; exit 1; }
-sudo install -d -o lisa -g "$group" -m 0750 "$target"
-# Retain existing files in a unique backup directory on reruns.
-backup=$(sudo mktemp -d "$target/before-task3.XXXXXX")
+sudo test ! -L "$config_target" || { echo 'Refusing a symlinked configuration directory.' >&2; exit 1; }
+sudo test ! -L "$lab_parent" || { echo 'Refusing a symlinked livelabs directory.' >&2; exit 1; }
+sudo test ! -L "$lab_target" || { echo 'Refusing a symlinked TLS lab directory.' >&2; exit 1; }
+sudo install -d -o lisa -g "$group" -m 0750 "$config_target" "$lab_parent" "$lab_target"
+# Retain existing configuration and scripts in unique backup directories on reruns.
+config_backup=$(sudo mktemp -d "$config_target/before-task3.XXXXXX")
+lab_backup=$(sudo mktemp -d "$lab_target/before-task3.XXXXXX")
 for name in sqlnet.ora tnsnames.ora tls_test_lisa.sh tls_test_lisa.sql; do
-    sudo test ! -L "$target/$name" || { echo "Refusing symlink: $target/$name" >&2; exit 1; }
-    if sudo test -e "$target/$name"; then sudo cp -p -- "$target/$name" "$backup/"; fi
+    sudo test ! -L "$config_target/$name" || { echo "Refusing symlink: $config_target/$name" >&2; exit 1; }
+    if sudo test -e "$config_target/$name"; then sudo cp -p -- "$config_target/$name" "$config_backup/"; fi
+done
+# Remove script copies installed in tns_admin by earlier lab versions after preserving them.
+sudo rm -f -- "$config_target/tls_test_lisa.sh" "$config_target/tls_test_lisa.sql"
+for name in tls_test_lisa.sh tls_test_lisa.sql pdb_name; do
+    sudo test ! -L "$lab_target/$name" || { echo "Refusing symlink: $lab_target/$name" >&2; exit 1; }
+    if sudo test -e "$lab_target/$name"; then sudo cp -p -- "$lab_target/$name" "$lab_backup/"; fi
 done
 stage=$(mktemp -d)
-trap 'rm -f -- "$stage/sqlnet.ora" "$stage/tnsnames.ora"; rmdir -- "$stage"' EXIT
+trap 'rm -f -- "$stage/sqlnet.ora" "$stage/tnsnames.ora" "$stage/pdb_name"; rmdir -- "$stage"' EXIT
+printf '%s\n' "$PDB_NAME" > "$stage/pdb_name"
 cat > "$stage/sqlnet.ora" <<'NET'
 NAMES.DIRECTORY_PATH = (TNSNAMES)
 TLS_CLIENT_AUTHENTICATION = FALSE
@@ -90,8 +102,12 @@ ${PDB_NAME}_tls${suffix} =
 NET
 done
 for name in sqlnet.ora tnsnames.ora; do
-    sudo install -o lisa -g "$group" -m 0640 "$stage/$name" "$target/$name"
+    sudo install -o lisa -g "$group" -m 0640 "$stage/$name" "$config_target/$name"
 done
-sudo install -o lisa -g "$group" -m 0750 "$SCRIPT_DIR/tls_test_lisa.sh" "$target/tls_test_lisa.sh"
-sudo install -o lisa -g "$group" -m 0640 "$SCRIPT_DIR/tls_test_lisa.sql" "$target/tls_test_lisa.sql"
-printf 'Lisa configured without a client wallet. Backups: %s\n' "$backup"
+sudo install -o lisa -g "$group" -m 0750 "$SCRIPT_DIR/tls_test_lisa.sh" "$lab_target/tls_test_lisa.sh"
+sudo install -o lisa -g "$group" -m 0640 "$SCRIPT_DIR/tls_test_lisa.sql" "$lab_target/tls_test_lisa.sql"
+sudo install -o lisa -g "$group" -m 0640 "$stage/pdb_name" "$lab_target/pdb_name"
+printf 'Lisa configured without a client wallet.\n'
+printf '  Lab scripts: %s\n' "$lab_target"
+printf '  Oracle Net configuration: %s\n' "$config_target"
+printf '  Backups: %s and %s\n' "$lab_backup" "$config_backup"

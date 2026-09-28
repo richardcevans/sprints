@@ -238,34 +238,66 @@ Connect through the `${PDB_NAME}_tls` alias and record the protocol, negotiated 
 
 ## Task 3: Create and test the Lisa client
 
-Use the wrapper scripts to create Lisa, install Oracle Instant Client 26ai, generate a walletless Oracle Net configuration, and test TLS 1.2 and TLS 1.3. The client uses the Oracle Linux system certificate store populated in Task 2; Lisa does not receive a client wallet or private key. This follows Oracle guidance for [one-way TLS connections that use the Linux system certificate store](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/configuring-transport-layer-security-encryption.html).
+Create Lisa's client environment as `oracle`, and then switch to the Lisa operating-system account to run the connection tests. Lisa's scripts are installed in `/home/lisa/livelabs/tls`. Her walletless Oracle Net configuration is installed separately in `/home/lisa/tns_admin`. The client uses the Oracle Linux system certificate store populated in Task 2; Lisa does not receive a client wallet or private key. This follows Oracle guidance for [one-way TLS connections that use the Linux system certificate store](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/configuring-transport-layer-security-encryption.html).
 
-1. From the `oracle` login shell in the extracted `livelabs/tls` directory, run the complete Lisa workflow. Enter the `system` database password when SQL*Plus prompts for each test connection.
+1. From the `oracle` login shell in the extracted `livelabs/tls` directory, prepare Lisa's account, Instant Client, scripts, and Oracle Net configuration.
 
     ```bash
     <copy>
-    ./tls_run_lisa.sh all "$PDB_NAME"
+    ./tls_run_lisa.sh setup "$PDB_NAME"
     </copy>
     ```
 
-    The wrapper runs `tls_setup_lisa.sh`, which validates the host and base TCPS alias, installs the [Oracle-recommended 26ai Instant Client](https://www.oracle.com/database/technologies/instant-client.html), creates or validates the Lisa account, backs up any existing Lisa configuration, and generates the TLS 1.2 and TLS 1.3 aliases. It then runs `tls_test_lisa.sh` as Lisa. The test uses the RPM-owned SQL*Plus binary and `tls_test_lisa.sql` to verify the network protocol and negotiated TLS version.
+    The setup validates the host and base TCPS alias, installs the [Oracle-recommended 26ai Instant Client](https://www.oracle.com/database/technologies/instant-client.html), creates or validates Lisa's account, and preserves backups before updating either Lisa directory.
 
-2. Confirm that both tests report `PASS`.
+2. Switch to Lisa's login shell.
+
+    ```bash
+    <copy>
+    sudo -iu lisa
+    </copy>
+    ```
+
+3. Confirm Lisa's home, scripts, and Oracle Net configuration.
+
+    ```bash
+    <copy>
+    whoami
+    pwd
+    ls -l ~/livelabs/tls
+    ls -l ~/tns_admin
+    </copy>
+    ```
+
+    `whoami` should return `lisa`, and `pwd` should return `/home/lisa`. The TLS directory contains `tls_test_lisa.sh`, `tls_test_lisa.sql`, and the configured PDB name. The `tns_admin` directory contains `sqlnet.ora` and `tnsnames.ora`.
+
+4. Change to Lisa's TLS directory and run both connection tests. Enter the `system` database password when SQL*Plus prompts for each connection.
+
+    ```bash
+    <copy>
+    cd ~/livelabs/tls
+    ./tls_test_lisa.sh
+    </copy>
+    ```
+
+    The test selects the RPM-owned SQL*Plus binary and uses `~/tns_admin` to connect through the dedicated TLS 1.2 and TLS 1.3 aliases. It verifies both `NETWORK_PROTOCOL` and the negotiated `TLS_VERSION`.
+
+5. Confirm that both tests report `PASS`.
 
     ```text
     <copy>
-    PASS: pdb1_tls12 negotiated tcps / TLSv1.2.
-    PASS: pdb1_tls13 negotiated tcps / TLSv1.3.
+    PASS: pdb1_tls12 negotiated tcps / TLS 1.2.
+    PASS: pdb1_tls13 negotiated tcps / TLS 1.3.
     </copy>
     ```
 
-    The alias prefix follows `PDB_NAME`, so the displayed alias changes when you use a different PDB name. The wrapper returns you to the original `oracle` shell after testing.
+    The alias prefix follows the PDB name recorded during setup, so the displayed alias changes when you configure a different PDB.
 
-3. To repeat only the two connection tests without reinstalling or reconfiguring Lisa, run:
+6. When testing is complete, return to the `oracle` shell.
 
     ```bash
     <copy>
-    ./tls_run_lisa.sh test "$PDB_NAME"
+    exit
     </copy>
     ```
 
@@ -338,7 +370,7 @@ Use the provided script to create connection-specific aliases and prove that the
     </copy>
     ```
 
-    The result should show `tcps` and `TLSv1.3`. On 26ai, or on 19.32 after switching to the next-generation provider, Task 4 makes `hybrid` the preferred TLS 1.3 key-exchange group when both endpoints support it.
+    The result should show `tcps` and `TLS 1.3`. On 26ai, or on 19.32 after switching to the next-generation provider, Task 4 makes `hybrid` the preferred TLS 1.3 key-exchange group when both endpoints support it.
 
 3. Exit SQL*Plus to return to the command line.
 
@@ -356,7 +388,7 @@ Use the provided script to create connection-specific aliases and prove that the
     </copy>
     ```
 
-    The result should show `tcps` and `TLSv1.2`. The TLS 1.2 connection demonstrates backward compatibility; it does not use ML-KEM or hybrid key exchange.
+    The result should show `tcps` and `TLS 1.2`. The TLS 1.2 connection demonstrates backward compatibility; it does not use ML-KEM or hybrid key exchange.
 
 ### Interpret the results
 

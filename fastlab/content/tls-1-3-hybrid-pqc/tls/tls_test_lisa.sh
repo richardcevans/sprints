@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 [[ $(id -un) == lisa && $HOME == /home/lisa ]] || { echo 'Run this test as Lisa with home /home/lisa.' >&2; exit 1; }
-PDB_NAME=${1:-${PDB_NAME:-pdb1}}
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+configured_pdb=pdb1
+if [[ -r $SCRIPT_DIR/pdb_name ]]; then
+    IFS= read -r configured_pdb < "$SCRIPT_DIR/pdb_name"
+fi
+PDB_NAME=${1:-${PDB_NAME:-$configured_pdb}}
 [[ $PDB_NAME =~ ^[a-zA-Z][a-zA-Z0-9_]*$ ]] || { echo 'Invalid PDB name.' >&2; exit 1; }
 export TNS_ADMIN=/home/lisa/tns_admin
 unset ORACLE_HOME ORACLE_SID TWO_TASK LOCAL SQLPATH ORACLE_PATH LD_LIBRARY_PATH LD_PRELOAD
@@ -11,15 +16,15 @@ mapfile -t bins < <(rpm -ql oracle-instantclient-sqlplus | grep -E '^/usr/lib/or
 SQLPLUS_BIN=${bins[0]}
 sqlplus_dir=$(dirname -- "$SQLPLUS_BIN")
 export PATH="$sqlplus_dir:/usr/bin:/bin"
-cd -- "$TNS_ADMIN"
+cd -- "$SCRIPT_DIR"
 "$SQLPLUS_BIN" -v
 failed=0
 for version in 1.2 1.3; do
     alias_name=${PDB_NAME}_tls${version/./}
     printf '\nTesting %s as database user system. Enter its database password when prompted.\n' "$alias_name"
     # Password is read by SQL*Plus, never a shell variable or command-line argument.
-    if "$SQLPLUS_BIN" -L "system@$alias_name" @"$TNS_ADMIN/tls_test_lisa.sql" "TLSv$version"; then
-        printf 'PASS: %s negotiated tcps / TLSv%s.\n' "$alias_name" "$version"
+    if "$SQLPLUS_BIN" -L "system@$alias_name" @"$SCRIPT_DIR/tls_test_lisa.sql" "$version"; then
+        printf 'PASS: %s negotiated tcps / TLS %s.\n' "$alias_name" "$version"
     else
         printf 'FAIL: %s (connection, query, or TLS assertion failed).\n' "$alias_name" >&2
         failed=1
