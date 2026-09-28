@@ -21,7 +21,7 @@ if [[ ! -d $TLS_LISTENER_WALLET_DIR ]]; then
     tls_die "Listener wallet directory does not exist: $TLS_LISTENER_WALLET_DIR. Set TLS_LISTENER_WALLET_DIR to the existing listener wallet."
 fi
 if [[ ! -f $TLS_LISTENER_WALLET_DIR/cwallet.sso && ! -f $TLS_LISTENER_WALLET_DIR/ewallet.p12 ]]; then
-    tls_die "No listener wallet was found in $TLS_LISTENER_WALLET_DIR. This FastLab does not create wallets."
+    tls_die "No listener wallet was found in $TLS_LISTENER_WALLET_DIR. Create and deploy the database wallet before configuring the host."
 fi
 tls_backup_directory "$TLS_LISTENER_WALLET_DIR"
 # any of the files under ORACLE_HOME/ORACLE_BASE.

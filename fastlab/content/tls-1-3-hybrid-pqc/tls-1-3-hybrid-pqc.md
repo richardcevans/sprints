@@ -50,6 +50,7 @@ export PDB_NAME=pdb1
 
 In this lab, you will:
 
+- Create a lab-only root CA and a database server key pair and certificate.
 - Configure `TLS_VERSION` to permit both TLS 1.2 and TLS 1.3.
 - Configure `TLS_KEY_EXCHANGE_GROUPS` with hybrid key exchange preferred.
 - Test TLS 1.3 and TLS 1.2 connections through the same TCPS endpoint.
@@ -60,28 +61,9 @@ In this lab, you will:
 This lab assumes you have:
 
 - An Oracle AI Database 19.32 or Oracle AI Database 26ai server and a matching client with TLS 1.3 support.
-- An existing one-way TLS configuration with a server certificate, trusted client certificate chain, and wallets available to the Oracle listener.
 - OS access to the database host and client configuration files as the appropriate Oracle software owner.
-- A working TCPS alias based on `PDB_NAME`, such as `${PDB_NAME}_tls`, plus database credentials for the lab PDB.
-
-**Version-specific provider note:** On Oracle Database 19.32, TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before Task 2, switch providers and restart. See the [Oracle Database 19c documentation on switching cryptographic providers](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/switching-crypto-providers.html):
-
-```bash
-<copy>
-python $ORACLE_HOME/bin/set_crypto_provider.py next-generation
-</copy>
-```
-
-Restart the database instance and reload the listener after the switch. Confirm the provider is active before proceeding to Task 2:
-
-```bash
-<copy>
-python $ORACLE_HOME/bin/set_crypto_provider.py status
-</copy>
-```
-
-This FastLab changes protocol and key-exchange settings and adds or updates the TCPS listener endpoint. It does not create wallets or certificates.
-If the one-way TLS wallets and certificates are not configured, complete the [Oracle one-way TLS workshop](https://livelabs.oracle.com/ords/r/dbpm/livelabs/view-workshop?wid=3631).
+- `sudo` access to install the lab root CA in the Oracle Linux trust store.
+- Database credentials for the lab PDB.
 
 ## Task 1: Download and prepare the TLS scripts
 
@@ -127,25 +109,71 @@ Open a Terminal session on your **DBSec-Lab** VM as OS user `oracle`. The archiv
 
 ## Task 2: Configure TLS 1.2 and TLS 1.3 on the host
 
-Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. Before writing, they back up the existing Oracle Net files and server wallet directory, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and add or update the TCPS listener endpoint. They use Oracle's recommended TCPS port `2484` when adding a new endpoint and reuse an existing TCPS listener port when one is already configured. They do not create or modify the server wallet or certificates.
+Run these scripts from the extracted `livelabs/tls` directory on the database host as the Oracle software owner. The scripts create a lab-only root CA, create a database server key pair and certificate signing request (CSR), sign the server certificate with the lab CA, and deploy the resulting wallet. They then back up the Oracle Net files, configure TLS 1.2 and TLS 1.3, create a TCPS alias named `${PDB_NAME}_tls`, and add or update the TCPS listener endpoint. They use the Oracle-recommended TCPS port `2484` when adding a new endpoint and reuse an existing TCPS listener port when one is already configured.
 
-By default, the host setup restarts the listener so new TCPS endpoints and wallet settings take effect. The listener wallet path is `${WALLET_ROOT}`; set `TLS_LISTENER_WALLET_DIR` when the existing listener wallet is elsewhere.
+This lab uses a self-signed root CA for a disposable, non-production environment. The database key pair itself is neither signed nor unsigned. The CSR produced from its public key is signed by the lab CA to create the database server certificate.
 
-The database server and listener still require their existing identity wallet. Configure the `oracle` client with an existing trust wallet so this task also works with Oracle Database 19.32. Task 3 configures Oracle Instant Client 26ai to use the Oracle Linux system trust store.
+By default, wallet deployment sets `WALLET_ROOT`, restarts the database, deploys the same server wallet to both the CDB-root and PDB-specific TLS directories under `WALLET_ROOT`, uses the CDB-root copy for the listener, and deploys an Oracle client wallet to `${TNS_ADMIN}/wallet`. The host setup then restarts the listener so the new TCPS endpoint and wallet settings take effect. Task 3 configures Oracle Instant Client 26ai to use the Oracle Linux system trust store instead of a client wallet.
 
-1. Confirm the variables and Oracle Net locations.
+1. **Version-specific provider note:** On Oracle Database 19.32, TLS 1.3, ML-KEM, and hybrid key exchange require the next-generation cryptographic provider. The legacy provider remains the default on 19.32 and supports TLS only through 1.2, so it cannot use TLS 1.3 settings or `TLS_KEY_EXCHANGE_GROUPS` values that depend on TLS 1.3. Before configuring TLS, switch providers and restart. See the [Oracle Database 19c documentation on switching cryptographic providers](https://docs.oracle.com/en/database/oracle/oracle-database/19/dbseg/switching-crypto-providers.html):
+
+    ```bash
+    <copy>
+    python $ORACLE_HOME/bin/set_crypto_provider.py next-generation
+    </copy>
+    ```
+
+    Restart the database instance and reload the listener after the switch. Confirm the provider is active before continuing:
+
+    ```bash
+    <copy>
+    python $ORACLE_HOME/bin/set_crypto_provider.py status
+    </copy>
+    ```
+
+2. Confirm the variables and Oracle Net locations, then provide a password for the lab wallets. The hidden prompt keeps the password out of shell history.
 
     ```bash
     <copy>
     echo "PDB_NAME=$PDB_NAME"
     echo "ORACLE_HOME=$ORACLE_HOME"
     echo "TNS_ADMIN=${TNS_ADMIN:-$ORACLE_HOME/network/admin}"
+    read -rsp "TLS wallet password: " TLS_PASSWORD
+    echo
+    export TLS_PASSWORD
     </copy>
     ```
 
     If `/etc/oratab` contains multiple database entries for the same `ORACLE_HOME`, set both `ORACLE_HOME` and `ORACLE_SID` explicitly. The scripts stop rather than guess which database to change.
 
-2. Configure TLS 1.2 and TLS 1.3. Hybrid key exchange remains disabled until Task 4.
+3. Create the lab root CA, create the database server key pair and CSR, sign the server certificate, and import the certificate into the database wallet.
+
+    ```bash
+    <copy>
+    ./tls_create_rootCA_wallet.sh
+    ./tls_create_DB_wallet.sh
+    ./tls_sign_DB_cert.sh
+    ./tls_import_signed_cert.sh
+    </copy>
+    ```
+
+4. Deploy the database wallet. By default, this command sets `WALLET_ROOT` and restarts the database before copying the wallet files.
+
+    ```bash
+    <copy>
+    ./tls_deploy_db_wallet.sh
+    </copy>
+    ```
+
+5. Install the generated lab root CA certificate in the Oracle Linux trust store.
+
+    ```bash
+    <copy>
+    ./tls_install_linux_cert.sh
+    </copy>
+    ```
+
+6. Configure TLS 1.2 and TLS 1.3. Hybrid key exchange remains disabled until Task 4.
 
     ```bash
     <copy>
@@ -155,25 +183,15 @@ The database server and listener still require their existing identity wallet. C
     </copy>
     ```
 
-3. If the server uses a private CA not already trusted by Oracle Linux, install only the issuer's public root CA certificate into the OS trust store. Skip this step if the issuer is already trusted.
+7. Configure the `oracle` user client with the deployed wallet.
 
     ```bash
     <copy>
-    export TLS_ROOT_CERT=/path/to/server-issuing-root-ca.pem
-    ./tls_install_linux_cert.sh
-    </copy>
-    ```
-
-4. Configure the `oracle` user's client with its existing trust wallet.
-
-    ```bash
-    <copy>
-    export TLS_CLIENT_WALLET_DIR="${TLS_CLIENT_WALLET_DIR:-$WALLET_ROOT}"
     ./tls_setup_client.sh
     </copy>
     ```
 
-5. Confirm the host configuration and generated alias.
+8. Confirm the host configuration and generated alias.
 
     ```bash
     <copy>

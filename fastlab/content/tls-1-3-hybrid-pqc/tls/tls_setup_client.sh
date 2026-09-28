@@ -17,10 +17,10 @@ fi
 
 if [[ $TLS_CLIENT_USE_SYSTEM_TRUST != YES ]]; then
     if [[ ! -d $TLS_CLIENT_WALLET_DIR ]]; then
-        tls_die "Client wallet directory does not exist: $TLS_CLIENT_WALLET_DIR. Set TLS_CLIENT_WALLET_DIR to the existing client trust wallet."
+        tls_die "Client wallet directory does not exist: $TLS_CLIENT_WALLET_DIR. Deploy the database wallet before configuring the client, or set TLS_CLIENT_WALLET_DIR to another trust wallet."
     fi
     if [[ ! -f $TLS_CLIENT_WALLET_DIR/cwallet.sso && ! -f $TLS_CLIENT_WALLET_DIR/ewallet.p12 ]]; then
-        tls_die "No client wallet was found in $TLS_CLIENT_WALLET_DIR. This FastLab does not create wallets."
+        tls_die "No client wallet was found in $TLS_CLIENT_WALLET_DIR. Deploy the database wallet before configuring the client, or set TLS_CLIENT_WALLET_DIR to another trust wallet."
     fi
     tls_backup_directory "$TLS_CLIENT_WALLET_DIR"
 else

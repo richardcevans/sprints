@@ -143,11 +143,11 @@ tls_load_defaults() {
     export ORACLE_SID="${ORACLE_SID:-oracle}"
     export WALLET_ROOT="${WALLET_ROOT:-$ORACLE_BASE/admin/$ORACLE_SID/wallet}"
     export ROOT_TLS_DIR="${ROOT_TLS_DIR:-$TLS_WORK_DIR/rootCA}"
-    export TLS_LISTENER_WALLET_DIR="${TLS_LISTENER_WALLET_DIR:-$WALLET_ROOT}"
-    export TLS_CLIENT_WALLET_DIR="${TLS_CLIENT_WALLET_DIR:-$TLS_LISTENER_WALLET_DIR}"
     export DB_TLS_DIR="${DB_TLS_DIR:-$TLS_WORK_DIR/db_wallet}"
     export TLS_DIR="${TLS_DIR:-$WALLET_ROOT/tls}"
     export ORA_TLS_DIR="${ORA_TLS_DIR:-$TNS_ADMIN/wallet}"
+    export TLS_LISTENER_WALLET_DIR="${TLS_LISTENER_WALLET_DIR:-$TLS_DIR}"
+    export TLS_CLIENT_WALLET_DIR="${TLS_CLIENT_WALLET_DIR:-$ORA_TLS_DIR}"
     export TLS_CLIENT_USER="${TLS_CLIENT_USER:-${USER:-oracle}}"
     if [[ -z ${TLS_CLIENT_HOME:-} ]]; then
         TLS_CLIENT_HOME=$(getent passwd "$TLS_CLIENT_USER" 2>/dev/null | cut -d: -f6 || true)
