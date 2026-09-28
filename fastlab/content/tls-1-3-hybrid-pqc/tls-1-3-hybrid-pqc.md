@@ -131,29 +131,23 @@ By default, wallet deployment sets `WALLET_ROOT`, restarts the database, deploys
     </copy>
     ```
 
-2. Confirm the variables and Oracle Net locations, then provide a password for the lab wallets. The hidden prompt keeps the password out of shell history.
+2. Confirm the variables and Oracle Net locations.
 
     ```bash
     <copy>
     echo "PDB_NAME=$PDB_NAME"
     echo "ORACLE_HOME=$ORACLE_HOME"
     echo "TNS_ADMIN=${TNS_ADMIN:-$ORACLE_HOME/network/admin}"
-    read -rsp "TLS wallet password: " TLS_PASSWORD
-    echo
-    export TLS_PASSWORD
     </copy>
     ```
 
     If `/etc/oratab` contains multiple database entries for the same `ORACLE_HOME`, set both `ORACLE_HOME` and `ORACLE_SID` explicitly. The scripts stop rather than guess which database to change.
 
-3. Create the lab root CA, create the database server key pair and CSR, sign the server certificate, and import the certificate into the database wallet.
+3. Create the lab root CA and database server identity wallet. The script prompts for the TLS wallet password twice and stops without changing a wallet if the entries do not match.
 
     ```bash
     <copy>
-    ./tls_create_rootCA_wallet.sh
-    ./tls_create_DB_wallet.sh
-    ./tls_sign_DB_cert.sh
-    ./tls_import_signed_cert.sh
+    ./tls_create_server_identity.sh
     </copy>
     ```
 
