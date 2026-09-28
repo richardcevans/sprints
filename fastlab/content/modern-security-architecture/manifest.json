@@ -1,9 +1,9 @@
 {
-    "workshoptitle": "LiveLabs FastLab - Modern Security Architecture: TLS 1.2, TLS 1.3, and hybrid post-quantum key exchange",
+    "workshoptitle": "LiveLabs FastLab - How do you build a modern security architecture with TLS 1.2, TLS 1.3, and hybrid post-quantum key exchange?",
     "help": "livelabs-help-database_us@oracle.com",
     "tutorials": [
         {
-            "title": "FastLab - Modern Security Architecture: TLS 1.2, TLS 1.3, and hybrid key exchange",
+            "title": "FastLab - How do you build a modern security architecture with TLS 1.2, TLS 1.3, and hybrid key exchange?",
             "filename": "modern-security-architecture.md"
         }
     ]
