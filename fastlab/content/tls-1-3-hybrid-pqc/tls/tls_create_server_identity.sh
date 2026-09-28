@@ -3,6 +3,27 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
+case ${1:-} in
+    '') ;;
+    --recreate)
+        export TLS_RECREATE_IDENTITY=YES
+        ;;
+    --help|-h)
+        printf 'Usage: %s [--recreate]\n' "${0##*/}"
+        printf '%s\n' '  --recreate  Back up and replace the generated root CA and database wallets.'
+        exit 0
+        ;;
+    *)
+        printf 'Unknown option: %s\n' "$1" >&2
+        printf 'Usage: %s [--recreate]\n' "${0##*/}" >&2
+        exit 2
+        ;;
+esac
+[[ $# -le 1 ]] || {
+    printf 'Usage: %s [--recreate]\n' "${0##*/}" >&2
+    exit 2
+}
+
 if ! IFS= read -rsp 'TLS wallet password: ' tls_password; then
     printf '\nUnable to read the TLS wallet password.\n' >&2
     exit 1
@@ -46,4 +67,5 @@ for step in "${steps[@]}"; do
 done
 
 unset TLS_PASSWORD
+unset TLS_RECREATE_IDENTITY
 printf '\nDatabase server identity wallet created successfully.\n'

@@ -11,6 +11,11 @@ ORAPKI=$(tls_require_oracle_bin orapki)
 tls_require_file "$TLS_ROOT_CERT"
 
 printf '%s\n' "Creating the database wallet and certificate request in $DB_TLS_DIR."
+if [[ ${TLS_RECREATE_IDENTITY:-NO} == YES && -d $DB_TLS_DIR ]]; then
+    printf '%s\n' 'Recreating the database wallet after preserving a backup.'
+    tls_backup_directory "$DB_TLS_DIR"
+    tls_safe_remove_dir "$DB_TLS_DIR"
+fi
 tls_backup_directory "$DB_TLS_DIR"
 tls_backup_file "$DB_TLS_DIR/ewallet.p12"
 tls_backup_file "$DB_TLS_DIR/cwallet.sso"

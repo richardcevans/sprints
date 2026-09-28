@@ -28,8 +28,8 @@ These scripts can create wallets, change Oracle Net configuration, restart an
 Oracle listener or database, change operating-system files, capture network
 traffic, install packages, create users, and remove files. Do not run them on
 production or shared systems. The person running these scripts accepts full
-responsibility for every mistake, outage, data loss, security exposure, and
-other fuckup caused by their use.
+responsibility for every mistake, outage, data loss, or security exposure
+caused by their use.
 ===============================================================================
 WARNING
 }
@@ -415,5 +415,9 @@ tls_confirm_destructive() {
 tls_safe_remove_dir() {
     local dir=$1
     [[ -n $dir && $dir != / && $dir != "$ORACLE_HOME" && $dir != "$ORACLE_BASE" ]] || tls_die "Refusing to remove unsafe directory: $dir"
-    [[ -d $dir ]] && tls_run_as_root rm -rf -- "$dir"
+    if [[ -d $dir && -w $dir && -w $(dirname -- "$dir") ]]; then
+        rm -rf -- "$dir"
+    elif [[ -d $dir ]]; then
+        tls_run_as_root rm -rf -- "$dir"
+    fi
 }

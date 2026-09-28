@@ -151,6 +151,16 @@ By default, wallet deployment sets `WALLET_ROOT`, restarts the database, deploys
     </copy>
     ```
 
+    If an earlier run created a root certificate that is not marked as a CA certificate, rebuild the generated identity. The script preserves timestamped backups of both generated wallet directories before replacing them:
+
+    ```bash
+    <copy>
+    ./tls_create_server_identity.sh --recreate
+    </copy>
+    ```
+
+    After rebuilding the identity, continue with the deployment command in the next step so the corrected certificate chain replaces the previously deployed wallet.
+
 4. Deploy the database wallet. By default, this command sets `WALLET_ROOT` and restarts the database before copying the wallet files.
 
     ```bash

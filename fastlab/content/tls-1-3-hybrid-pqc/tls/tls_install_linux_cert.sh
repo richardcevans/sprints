@@ -9,10 +9,9 @@ tls_init
 tls_require_file "$TLS_ROOT_CERT"
 
 command -v openssl >/dev/null 2>&1 || tls_die 'openssl is required to validate the CA certificate.'
-openssl x509 -in "$TLS_ROOT_CERT" -noout -subject -issuer >/dev/null 2>&1 || \
+root_cert_text=$(openssl x509 -in "$TLS_ROOT_CERT" -noout -text 2>/dev/null) || \
     tls_die "TLS_ROOT_CERT is not a readable PEM X.509 certificate: $TLS_ROOT_CERT"
-openssl x509 -in "$TLS_ROOT_CERT" -noout -text | grep -q 'CA:TRUE' || \
-    tls_die "TLS_ROOT_CERT is not marked as a CA certificate: $TLS_ROOT_CERT"
+grep -q 'CA:TRUE' <<<"$root_cert_text" || tls_die "TLS_ROOT_CERT is not marked as a CA certificate: $TLS_ROOT_CERT"
 
 command -v update-ca-trust >/dev/null 2>&1 || \
     tls_die 'update-ca-trust is not available. Install/configure ca-certificates for Oracle Linux before continuing.'
