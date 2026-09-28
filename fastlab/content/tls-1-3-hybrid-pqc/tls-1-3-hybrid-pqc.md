@@ -234,125 +234,38 @@ Connect through the `${PDB_NAME}_tls` alias and record the protocol, negotiated 
 
 ## Task 3: Create and test the Lisa client
 
-Create a separate Linux login and use Oracle Instant Client 26ai to test the two TCPS aliases. The CA root was added to the host-wide Oracle Linux trust store in Task 2; Lisa does not receive or use a client wallet.
+Use the wrapper scripts to create Lisa, install Oracle Instant Client 26ai, generate a walletless Oracle Net configuration, and test TLS 1.2 and TLS 1.3. The client uses the Oracle Linux system certificate store populated in Task 2; Lisa does not receive a client wallet or private key. This follows Oracle guidance for [one-way TLS connections that use the Linux system certificate store](https://docs.oracle.com/en/database/oracle/oracle-database/26/dbseg/configuring-transport-layer-security-encryption.html).
 
-1. Create Lisa if this account does not already exist.
-
-    ```bash
-    <copy>
-    if ! id lisa >/dev/null 2>&1; then sudo useradd -m -s /bin/bash lisa; fi
-    getent passwd lisa
-    </copy>
-    ```
-
-    Confirm Lisa's home directory is `/home/lisa` before continuing.
-
-2. Check for an existing Instant Client RPM, then install the 26ai repository and SQL*Plus packages.
+1. From the `oracle` login shell in the extracted `livelabs/tls` directory, run the complete Lisa workflow. Enter the `system` database password when SQL*Plus prompts for each test connection.
 
     ```bash
     <copy>
-    . /etc/os-release
-    OL_MAJOR=${VERSION_ID%%.*}
-    case "$OL_MAJOR" in 8|9|10) ;; *) echo "Unsupported Oracle Linux release: $VERSION_ID"; exit 1 ;; esac
-    INSTALLED_IC=$(rpm -qa --qf '%{NAME} %{VERSION}\n' | grep '^oracle-instantclient' | grep -v '^oracle-instantclient-release-' || true)
-    printf '%s\n' "${INSTALLED_IC:-No Oracle Instant Client RPMs are installed.}"
-    if [ -n "$INSTALLED_IC" ] && printf '%s\n' "$INSTALLED_IC" | grep -Evq '^[^ ]+ 23\.'; then
-      echo "A different Instant Client major version is installed. Stop and review its application dependencies."
-      exit 1
-    fi
-    sudo dnf -v install -y "oracle-instantclient-release-26ai-el${OL_MAJOR}"
-    sudo dnf -v install -y oracle-instantclient-basic oracle-instantclient-sqlplus
+    ./tls_run_lisa.sh all "$PDB_NAME"
     </copy>
     ```
 
-    Oracle publishes the 26ai-family Instant Client RPMs as version 23.x. The check stops before package installation when another major version is present. See [Oracle Instant Client downloads for Linux x86-64](https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html).
+    The wrapper runs `tls_setup_lisa.sh`, which validates the host and base TCPS alias, installs the [Oracle-recommended 26ai Instant Client](https://www.oracle.com/database/technologies/instant-client.html), creates or validates the Lisa account, backs up any existing Lisa configuration, and generates the TLS 1.2 and TLS 1.3 aliases. It then runs `tls_test_lisa.sh` as Lisa. The test uses the RPM-owned SQL*Plus binary and `tls_test_lisa.sql` to verify the network protocol and negotiated TLS version.
 
-3. Create Lisa's Oracle Net directory and files. Copy the existing base alias, then let the scripts generate the TLS-version aliases and walletless client settings.
+2. Confirm that both tests report `PASS`.
+
+    ```text
+    <copy>
+    PASS: pdb1_tls12 negotiated tcps / TLSv1.2.
+    PASS: pdb1_tls13 negotiated tcps / TLSv1.3.
+    </copy>
+    ```
+
+    The alias prefix follows `PDB_NAME`, so the displayed alias changes when you use a different PDB name. The wrapper returns you to the original `oracle` shell after testing.
+
+3. To repeat only the two connection tests without reinstalling or reconfiguring Lisa, run:
 
     ```bash
     <copy>
-    LISA_TNS_ADMIN=/home/lisa/tns_admin
-    ORACLE_NET_ADMIN=${TNS_ADMIN:-$ORACLE_HOME/network/admin}
-    sudo install -v -d -o lisa -g lisa -m 0750 "$LISA_TNS_ADMIN"
-    sudo install -v -o lisa -g lisa -m 0640 "$ORACLE_NET_ADMIN/tnsnames.ora" "$LISA_TNS_ADMIN/tnsnames.ora"
-    TLS_CLIENT_USE_SYSTEM_TRUST=YES TLS_CLIENT_USER=lisa TLS_CLIENT_TNS_ADMIN="$LISA_TNS_ADMIN" ./tls_setup_client.sh
-    TLS_CLIENT_TNS_ADMIN="$LISA_TNS_ADMIN" ./tls_setup_test_aliases.sh
-    sudo chown -Rv lisa:lisa "$LISA_TNS_ADMIN"
+    ./tls_run_lisa.sh test "$PDB_NAME"
     </copy>
     ```
 
-    The scripts create `sqlnet.ora` without a `WALLET_LOCATION`, and the two version-specific TNS aliases explicitly use `WALLET_LOCATION=SYSTEM`. They also enable server-certificate hostname matching. The root CA is public trust data; no server wallet or private key is copied to Lisa.
-
-4. Switch to Lisa's login shell.
-
-    ```bash
-    <copy>
-    sudo su - lisa
-    </copy>
-    ```
-
-5. Set Lisa's client environment. A login shell does not inherit `PDB_NAME` from `oracle`, so use the same PDB value configured earlier. `pdb1` is the default.
-
-    ```bash
-    <copy>
-    export PDB_NAME=pdb1
-    export TNS_ADMIN=$HOME/tns_admin
-    SQLPLUS_BIN=$(command -v sqlplus 2>/dev/null || find /usr/lib/oracle -type f -path "*/client64/bin/sqlplus" -print -quit)
-    if [ -z "$SQLPLUS_BIN" ]; then echo "SQL*Plus was not found after installation."; exit 1; fi
-    export PATH="$(dirname "$SQLPLUS_BIN"):$PATH"
-    sqlplus -v
-    </copy>
-    ```
-
-6. Test TLS 1.2 as database user `system`, then run the query and exit SQL*Plus.
-
-    ```bash
-    <copy>
-    sqlplus "system@${PDB_NAME}_tls12"
-    </copy>
-    ```
-
-    ```sql
-    <copy>
-    SELECT SYS_CONTEXT('USERENV', 'NETWORK_PROTOCOL') AS network_protocol,
-           SYS_CONTEXT('USERENV', 'TLS_VERSION') AS tls_version,
-           SYS_CONTEXT('USERENV', 'TLS_CIPHERSUITE') AS tls_ciphersuite
-      FROM dual;
-    exit
-    </copy>
-    ```
-
-    Confirm the result shows `tcps` and `TLSv1.2`.
-
-7. Test TLS 1.3 as `system`, run the same query, and exit SQL*Plus.
-
-    ```bash
-    <copy>
-    sqlplus "system@${PDB_NAME}_tls13"
-    </copy>
-    ```
-
-    ```sql
-    <copy>
-    SELECT SYS_CONTEXT('USERENV', 'NETWORK_PROTOCOL') AS network_protocol,
-           SYS_CONTEXT('USERENV', 'TLS_VERSION') AS tls_version,
-           SYS_CONTEXT('USERENV', 'TLS_CIPHERSUITE') AS tls_ciphersuite
-      FROM dual;
-    exit
-    </copy>
-    ```
-
-    Confirm the result shows `tcps` and `TLSv1.3`.
-
-8. Exit Lisa's login shell to return to the `oracle` shell before continuing.
-
-    ```bash
-    <copy>
-    exit
-    </copy>
-    ```
-
-Database authentication still uses `system` and its database password; Lisa is the Linux client identity, not a new database account. Use a least-privileged database account instead of `system` outside this disposable lab.
+Database authentication still uses `system` and its database password. Lisa is the Linux client identity, not a database account. Use a least-privileged database account instead of `system` outside this disposable lab.
 
 ## Task 4: Prefer hybrid key exchange
 
