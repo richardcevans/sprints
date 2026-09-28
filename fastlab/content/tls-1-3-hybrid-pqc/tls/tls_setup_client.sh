@@ -52,7 +52,7 @@ if [[ ${TLS_CONFIGURE_TLS13:-YES} == YES ]]; then
     fi
 fi
 
-if ! grep -Eiq "^[[:space:]]*${TLS_TNS_ALIAS}[[:space:]]*=" "$CLIENT_TNSNAMES"; then
+if ! tls_grep_file "$CLIENT_TNSNAMES" -Eiq "^[[:space:]]*${TLS_TNS_ALIAS}[[:space:]]*="; then
     while IFS= read -r line; do
         [[ -n $line ]] && tls_append_raw_line "$CLIENT_TNSNAMES" "$line"
     done <<EOF
@@ -73,6 +73,6 @@ if [[ ${TLS_CHOWN_CLIENT_FILES:-NO} == YES ]]; then
 fi
 
 printf '%s\n' "Updated $CLIENT_SQLNET:"
-cat -- "$CLIENT_SQLNET"
+tls_cat_file "$CLIENT_SQLNET"
 printf '%s\n' "Updated $CLIENT_TNSNAMES:"
-cat -- "$CLIENT_TNSNAMES"
+tls_cat_file "$CLIENT_TNSNAMES"

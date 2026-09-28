@@ -48,9 +48,13 @@ if [[ ${TLS_REMOVE_CERTS:-NO} == YES ]]; then
     tls_backup_file "$TLS_SIGNED_CERT"
     tls_safe_remove_dir "$TLS_WORK_DIR"
 fi
-if [[ ${TLS_REMOVE_CA_CERT:-NO} == YES && -f $TLS_ROOT_CERT ]]; then
-    tls_run_as_root rm -f -- "$TLS_CA_ANCHOR_DIR/$(basename -- "$TLS_ROOT_CERT")"
-    command -v update-ca-trust >/dev/null 2>&1 && tls_run_as_root update-ca-trust extract
+if [[ ${TLS_REMOVE_CA_CERT:-NO} == YES ]]; then
+    anchor="$TLS_CA_ANCHOR_DIR/$TLS_CA_ANCHOR_NAME"
+    if [[ -e $anchor ]]; then
+        tls_run_as_root rm -f -- "$anchor"
+        command -v update-ca-trust >/dev/null 2>&1 && tls_run_as_root update-ca-trust extract
+        printf 'Removed lab trust anchor: %s\n' "$anchor"
+    fi
 fi
 if [[ ${TLS_REMOVE_PCAP:-NO} == YES ]]; then
     find "$(dirname -- "$TLS_CAPTURE_FILE")" -maxdepth 1 -type f -name 'tcpdump_*.pcap' -delete

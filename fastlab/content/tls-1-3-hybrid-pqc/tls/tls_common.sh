@@ -176,6 +176,7 @@ tls_load_defaults() {
     export TLS_SIGNED_CERT="${TLS_SIGNED_CERT:-$DB_TLS_DIR/dbserver-signed.crt}"
     export TLS_PASSWORD="${TLS_PASSWORD:-${TLS_WALLET_PASSWORD:-${DBUSR_PWD:-}}}"
     export TLS_CA_ANCHOR_DIR="${TLS_CA_ANCHOR_DIR:-/etc/pki/ca-trust/source/anchors}"
+    export TLS_CA_ANCHOR_NAME="${TLS_CA_ANCHOR_NAME:-tls-fastlab-root-ca.crt}"
     export TLS_CAPTURE_PORT="${TLS_CAPTURE_PORT:-$TLS_TCPS_PORT}"
     export TLS_CAPTURE_FILE="${TLS_CAPTURE_FILE:-$TLS_SCRIPT_DIR/tcpdump_${TLS_CAPTURE_PORT}.pcap}"
 }
@@ -206,6 +207,40 @@ tls_run_as_root() {
     fi
 }
 
+tls_path_exists() {
+    local path=$1
+    [[ -e $path ]] || tls_run_as_root test -e "$path"
+}
+
+tls_path_is_file() {
+    local path=$1
+    [[ -f $path ]] || tls_run_as_root test -f "$path"
+}
+
+tls_path_is_directory() {
+    local path=$1
+    [[ -d $path ]] || tls_run_as_root test -d "$path"
+}
+
+tls_cat_file() {
+    local file=$1
+    if [[ -r $file ]]; then
+        cat -- "$file"
+    else
+        tls_run_as_root cat -- "$file"
+    fi
+}
+
+tls_grep_file() {
+    local file=$1
+    shift
+    if [[ -r $file ]]; then
+        grep "$@" "$file"
+    else
+        tls_run_as_root grep "$@" "$file"
+    fi
+}
+
 tls_file_writable() {
     local file=$1
     [[ -w $file || ( ! -e $file && -w $(dirname -- "$file") ) ]]
@@ -213,7 +248,7 @@ tls_file_writable() {
 
 tls_touch_file() {
     local file=$1
-    if [[ -e $file ]]; then
+    if tls_path_exists "$file"; then
         return 0
     elif tls_file_writable "$file"; then
         touch "$file"
@@ -234,7 +269,7 @@ tls_edit_in_place() {
 
 tls_append_line() {
     local file=$1 line=$2
-    grep -Fqx -- "$line" "$file" 2>/dev/null && return 0
+    tls_grep_file "$file" -Fqx -- "$line" 2>/dev/null && return 0
     if tls_file_writable "$file"; then
         printf '%s\n' "$line" >> "$file"
     else
@@ -284,7 +319,7 @@ tls_filter_orphan_tns_entries() {
 
 tls_remove_orphan_tns_entries() {
     local file=$1 temp
-    [[ -f $file ]] || return 0
+    tls_path_is_file "$file" || return 0
 
     if tls_file_writable "$file" && [[ -w $(dirname -- "$file") ]]; then
         temp=$(mktemp "${file}.tls-fastlab.XXXXXX")
@@ -298,7 +333,7 @@ tls_remove_orphan_tns_entries() {
         fi
     else
         temp=$(tls_run_as_root mktemp "${file}.tls-fastlab.XXXXXX")
-        tls_filter_orphan_tns_entries "$file" | tls_run_as_root tee "$temp" >/dev/null
+        tls_cat_file "$file" | tls_filter_orphan_tns_entries /dev/stdin | tls_run_as_root tee "$temp" >/dev/null
         tls_run_as_root chmod --reference="$file" -- "$temp"
         tls_run_as_root chown --reference="$file" -- "$temp"
         if tls_run_as_root cmp -s -- "$file" "$temp"; then
@@ -318,11 +353,11 @@ tls_set_parameter() {
 
 tls_backup_file() {
     local file=$1 backup
-    [[ -e $file ]] || return 0
+    tls_path_exists "$file" || return 0
     backup="${file}.before-tls-fastlab"
-    if [[ -e $backup ]]; then
+    if tls_path_exists "$backup"; then
         backup="${file}.before-tls-fastlab.$(date +%Y%m%d%H%M%S)"
-        while [[ -e $backup ]]; do
+        while tls_path_exists "$backup"; do
             backup="${file}.before-tls-fastlab.$(date +%Y%m%d%H%M%S).$RANDOM"
         done
     fi
@@ -336,11 +371,11 @@ tls_backup_file() {
 
 tls_backup_directory() {
     local directory=$1 backup
-    [[ -d $directory ]] || return 0
+    tls_path_is_directory "$directory" || return 0
     backup="${directory}.before-tls-fastlab"
-    if [[ -e $backup ]]; then
+    if tls_path_exists "$backup"; then
         backup="${directory}.before-tls-fastlab.$(date +%Y%m%d%H%M%S)"
-        while [[ -e $backup ]]; do
+        while tls_path_exists "$backup"; do
             backup="${directory}.before-tls-fastlab.$(date +%Y%m%d%H%M%S).$RANDOM"
         done
     fi
@@ -381,14 +416,14 @@ tls_sqlplus_login_line() {
 
 tls_chown_path() {
     local path=$1 user=${2:-$TLS_CLIENT_USER} group
-    [[ -e $path ]] || return 0
+    tls_path_exists "$path" || return 0
     id "$user" >/dev/null 2>&1 || return 0
     group=$(id -gn "$user")
     tls_run_as_root chown -R "$user:$group" -- "$path"
 }
 
 tls_require_file() {
-    [[ -f $1 ]] || tls_die "Required file does not exist: $1"
+    tls_path_is_file "$1" || tls_die "Required file does not exist: $1"
 }
 
 tls_read_alias() {

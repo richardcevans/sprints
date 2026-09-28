@@ -161,6 +161,8 @@ By default, wallet deployment sets `WALLET_ROOT`, restarts the database, deploys
 
     After rebuilding the identity, continue with the deployment command in the next step so the corrected certificate chain replaces the previously deployed wallet.
 
+    If the earlier root certificate was already installed in the Oracle Linux trust store, use the `--replace` option in step 5.
+
 4. Deploy the database wallet. By default, this command sets `WALLET_ROOT` and restarts the database before copying the wallet files.
 
     ```bash
@@ -174,6 +176,14 @@ By default, wallet deployment sets `WALLET_ROOT`, restarts the database, deploys
     ```bash
     <copy>
     ./tls_install_linux_cert.sh
+    </copy>
+    ```
+
+    A normal installation refuses to overwrite a different certificate at the lab trust-anchor path. If you rebuilt the identity with `--recreate`, review the existing anchor, and then replace it explicitly:
+
+    ```bash
+    <copy>
+    ./tls_install_linux_cert.sh --replace
     </copy>
     ```
 
@@ -437,6 +447,14 @@ To remove the Oracle Instant Client Basic, SQL*Plus, and 26ai release RPMs insta
     ```
 
 The package cleanup disables dependency autoremove and does not request removal of other Instant Client packages. Do not run it if another application uses these RPMs.
+
+To remove the lab root certificate from the Oracle Linux trust store without changing Oracle Net files, run:
+
+    ```bash
+    <copy>
+    ./tls_remove_linux_cert.sh --yes-i-understand
+    </copy>
+    ```
 
 You may now proceed to the next lab.
 
