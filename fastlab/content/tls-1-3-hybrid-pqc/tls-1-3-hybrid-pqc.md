@@ -409,11 +409,11 @@ If TLS 1.3 fails, confirm the selected release and provider, then confirm hybrid
 
 ## Task 7: Optional rollback
 
-1. Use `tls_restore.sh` to restore the original Oracle Net files saved before the lab. The script backs up the current files first, requires the non-production acknowledgement and explicit rollback confirmation, restarts the listener, and re-registers database services. It does not change wallets or certificates; wallet-directory backups are retained.
+1. Use `tls_restore.sh` to restore the original Oracle Net files saved before the lab. The script backs up the current files first, requires the non-production acknowledgement and prompts for explicit rollback confirmation, restarts the listener, and re-registers database services. It does not change wallets or certificates; wallet-directory backups are retained.
 
     ```bash
     <copy>
-    ./tls_restore.sh --yes-i-understand
+    ./tls_restore.sh
     </copy>
     ```
 
