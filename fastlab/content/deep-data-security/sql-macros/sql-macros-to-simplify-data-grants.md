@@ -469,9 +469,10 @@ Continue with the following Deep Data Security topics:
 
 ## Learn More
 
-- [Oracle Deep Data Security Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/oracle-deep-data-security-guide.pdf)
+- [About Data Grants](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/data-grants.html)
 - [Create Data Grants](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/create-data-grants.html)
-- [Oracle Database SQL Language Reference: SQL Macros](https://docs.oracle.com/en/database/oracle/oracle-database/26/lnpls/sql-macros.html)
+- [Oracle AI Database PL/SQL Language Reference: `SQL_MACRO` Clause](https://docs.oracle.com/en/database/oracle/oracle-database/26/lnpls/SQL_MACRO-clause.html)
+- [Oracle Deep Data Security Guide](https://docs.oracle.com/en/database/oracle/oracle-database/26/ddscg/oracle-deep-data-security-guide.pdf)
 - [Building Trusted Generative AI Experiences with Oracle Deep Data Security](https://blogs.oracle.com/database/building-trusted-genai-experiences-with-oracle-deep-data-security)
 
 ## Acknowledgements
